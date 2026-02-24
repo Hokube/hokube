@@ -12,6 +12,7 @@
   --muted:rgba(255,255,255,.75);
   --bar-bg:rgba(0,0,0,.92);
   --hair:rgba(255,255,255,.12);
+  --sheet:rgba(0,0,0,.35);
 }
 
 @media (prefers-color-scheme: light){
@@ -21,6 +22,7 @@
     --muted:rgba(0,0,0,.7);
     --bar-bg:rgba(255,255,255,.92);
     --hair:rgba(0,0,0,.12);
+    --sheet:rgba(255,255,255,.35);
   }
 }
 
@@ -32,6 +34,12 @@ html, body{
   background:var(--bg);
   color:var(--fg);
   font-family:Arial, sans-serif;
+}
+
+/* On applique le dégradé sur body, mais on garde une "sheet" lisible par-dessus */
+body{
+  min-height:100%;
+  transition: background 0.8s ease;
 }
 
 /* Frame séparée en haut */
@@ -81,15 +89,13 @@ html, body{
 .cover-wrap{
   position:relative;
   overflow:hidden;
-  /* bord fin très discret, optionnel : */
-  /* border:1px solid var(--hair); */
 }
 
 .cover{
   width:100%;
-  aspect-ratio:1/1;      /* carré */
-  object-fit:contain;     /* IMPORTANT: affiche toute la pochette */
-  background:var(--bg);   /* bandes noires si l'image n'est pas parfaitement carrée */
+  aspect-ratio:1/1;
+  object-fit:contain;     /* affiche toute la pochette */
+  background:rgba(0,0,0,.15);
   display:block;
   transition:transform .22s ease, filter .22s ease;
 }
@@ -145,7 +151,7 @@ html, body{
 }
 .instagram:hover{ opacity:1; }
 
-/* Mobile: grille un peu plus large */
+/* Mobile */
 @media (max-width:520px){
   .grid{
     grid-template-columns:repeat(2, minmax(0, 1fr));
@@ -153,8 +159,9 @@ html, body{
   }
 }
 
-/* Accessibilité / animations réduites */
+/* Réduit les animations si l’utilisateur le préfère */
 @media (prefers-reduced-motion: reduce){
+  body{ transition:none; }
   .cover, .year, .instagram{ transition:none; }
 }
 </style>
@@ -245,6 +252,104 @@ html, body{
     </a>
   </div>
 </main>
+
+<script>
+/**
+ * SHAKE -> dégradé pastel aléatoire
+ * - Android: OK direct
+ * - iOS: nécessite un tap sur "Enable Motion" (permission capteurs)
+ */
+
+let lastTime = 0;
+const shakeThreshold = 14; // un peu plus sensible
+let lastX = null, lastY = null, lastZ = null;
+
+function pastelHsl(){
+  const h = Math.floor(Math.random() * 360);
+  const s = 55 + Math.floor(Math.random() * 15); // 55–70%
+  const l = 78 + Math.floor(Math.random() * 10); // 78–88% (pastel)
+  return `hsl(${h} ${s}% ${l}%)`;
+}
+
+function randomPastelGradient(){
+  const c1 = pastelHsl();
+  const c2 = pastelHsl();
+  const c3 = pastelHsl();
+  document.body.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
+}
+
+function handleMotion(event){
+  const acc = event.accelerationIncludingGravity;
+  if(!acc) return;
+
+  if(lastX !== null){
+    const dx = Math.abs(lastX - acc.x);
+    const dy = Math.abs(lastY - acc.y);
+    const dz = Math.abs(lastZ - acc.z);
+
+    if(dx + dy + dz > shakeThreshold){
+      const now = Date.now();
+      if(now - lastTime > 900){ // anti-spam
+        randomPastelGradient();
+        lastTime = now;
+      }
+    }
+  }
+
+  lastX = acc.x;
+  lastY = acc.y;
+  lastZ = acc.z;
+}
+
+function enableMotion(){
+  if(typeof DeviceMotionEvent !== "undefined" &&
+     typeof DeviceMotionEvent.requestPermission === "function"){
+      DeviceMotionEvent.requestPermission()
+        .then(res => {
+          if(res === "granted"){
+            window.addEventListener("devicemotion", handleMotion, { passive:true });
+            const b = document.getElementById("motionBtn");
+            if(b) b.remove();
+          }
+        })
+        .catch(()=>{});
+  } else {
+    window.addEventListener("devicemotion", handleMotion, { passive:true });
+  }
+}
+
+/* iOS: bouton permission */
+if(typeof DeviceMotionEvent !== "undefined" &&
+   typeof DeviceMotionEvent.requestPermission === "function"){
+  const btn = document.createElement("button");
+  btn.id = "motionBtn";
+  btn.type = "button";
+  btn.textContent = "ENABLE MOTION";
+  btn.onclick = enableMotion;
+
+  btn.style.position = "fixed";
+  btn.style.right = "14px";
+  btn.style.bottom = "14px";
+  btn.style.zIndex = "20";
+  btn.style.background = "transparent";
+  btn.style.color = "var(--fg)";
+  btn.style.border = "1px solid var(--hair)";
+  btn.style.padding = "10px 12px";
+  btn.style.fontSize = "10px";
+  btn.style.letterSpacing = "2px";
+  btn.style.fontFamily = '"Courier New", Courier, monospace';
+  btn.style.cursor = "pointer";
+  btn.style.backdropFilter = "blur(8px)";
+  btn.style.backgroundColor = "var(--sheet)";
+
+  document.body.appendChild(btn);
+} else {
+  window.addEventListener("devicemotion", handleMotion, { passive:true });
+}
+
+/* Gradient initial pastel (optionnel) */
+randomPastelGradient();
+</script>
 
 </body>
 </html>
