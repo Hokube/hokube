@@ -34,24 +34,26 @@
 
 *{ box-sizing:border-box; }
 
+/* IMPORTANT: fond transparent pour ne pas masquer le calque #bg-layer (fix iOS) */
 html, body{
   margin:0;
   min-height:100%;
-  background:var(--bg); /* fond neutre */
+  background: transparent;
   color:var(--fg);
   font-family:Arial, sans-serif;
 }
 
-/* Calque de fond (résout iOS “gradient pas full height”) */
+/* Calque de fond (fix iOS: pas de z-index négatif) */
 #bg-layer{
   position:fixed;
   inset:0;
-  z-index:-1;
+  z-index:0;
   pointer-events:none;
 
-  /* le gradient sera injecté via JS */
-  background: transparent;
+  /* fond neutre par défaut */
+  background: var(--bg);
 
+  /* le gradient sera injecté via JS */
   opacity:0;
   filter:saturate(1);
   transition:
@@ -65,11 +67,9 @@ body.bg-on #bg-layer{
   filter:saturate(1);
 }
 body.bg-desat #bg-layer{
-  /* désaturation lente */
   filter:saturate(0.06);
 }
 body.bg-off #bg-layer{
-  /* extinction */
   opacity:0;
 }
 
@@ -104,6 +104,12 @@ body.bg-off #bg-layer{
   padding:26px 18px 44px;
 }
 
+/* IMPORTANT: contenu au-dessus du fond (fix iOS layering) */
+.topbar, .main{
+  position:relative;
+  z-index:1;
+}
+
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
@@ -124,7 +130,7 @@ body.bg-off #bg-layer{
 .cover{
   width:100%;
   aspect-ratio:1/1;
-  object-fit:contain;        /* affiche toute la pochette */
+  object-fit:contain;
   background:var(--cover-bg);
   display:block;
   transition:transform .22s ease, filter .22s ease;
@@ -256,7 +262,7 @@ body.bg-off #bg-layer{
 
       <a class="card" href="https://distrokid.com/hyperfollow/hokube/gaoU" target="_blank" rel="noopener noreferrer">
         <div class="cover-wrap">
-          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/f18444ff29b9aee19cb35f64d1ce1c1e/500x500-000000-80-0-0.jpg" alt="I HAD TO DO THIS AT SOME POINT">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/f18444ff29b9aee19cb35f64d1ce1c1e/500x500-000000-80-0-0.jpg" alt="I HAD TO DO THIS AT SOME POINT EP">
           <div class="year">2015</div>
         </div>
         <div class="title">I HAD TO DO THIS AT SOME POINT EP</div>
@@ -284,7 +290,7 @@ body.bg-off #bg-layer{
 <script>
 /**
  * Shake behavior:
- * 1) Shake -> gradient fade-in 5s (lisible, tons froids)
+ * 1) Shake -> gradient fade-in (lent)
  * 2) 10s sans shake -> désaturation lente
  * 3) Puis extinction vers fond neutre
  *
@@ -309,8 +315,7 @@ function setBgDurations(opacityDur, filterDur){
   document.documentElement.style.setProperty("--bgFilterDur", filterDur);
 }
 
-/* Tons froids uniquement: 140..290 (verts->cyans->bleus->violets)
-   On évite jaune/rose, et on garde un pastel lisible. */
+/* Tons froids uniquement: 140..290 (verts->cyans->bleus->violets) */
 function coolPastelHsl(){
   const h = 140 + Math.floor(Math.random() * (290 - 140 + 1));
   const s = 42 + Math.floor(Math.random() * 14); // 42–56%
@@ -345,17 +350,15 @@ function scheduleDesatAndFade(){
       setBgDurations((FADEOUT_DUR_MS/1000) + "s", "1.2s");
       document.body.classList.add("bg-off");
       document.body.classList.remove("bg-on");
-      // On garde bg-desat (pas grave), ou on peut nettoyer plus tard.
     }, DESAT_DUR_MS);
 
   }, DESAT_AFTER_MS);
 }
 
 function triggerGradient(){
-  // Fade-in 5s
+  // Fade-in lent
   setBgDurations("5s", "1.2s");
 
-  // Nouveau gradient + état actif
   applyNewGradient();
   document.body.classList.remove("bg-off");
   document.body.classList.remove("bg-desat");
@@ -430,7 +433,6 @@ if(typeof DeviceMotionEvent !== "undefined" &&
 
   document.body.appendChild(btn);
 } else {
-  // Android / desktop: on écoute quand même, mais pas de gradient tant qu'il n'y a pas de shake
   window.addEventListener("devicemotion", handleMotion, { passive:true });
 }
 </script>
