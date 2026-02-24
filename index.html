@@ -9,68 +9,46 @@
 :root{
   --bg:#000;
   --fg:#fff;
-  --muted:rgba(255,255,255,.75);
   --bar-bg:rgba(0,0,0,.92);
   --hair:rgba(255,255,255,.12);
   --sheet:rgba(0,0,0,.35);
   --cover-bg:rgba(0,0,0,.15);
 
-  /* transitions du calque gradient (pilotées par JS) */
-  --bgOpacityDur: 5s;
-  --bgFilterDur: 1.2s;
+  /* FX */
+  --fxText: rgb(255, 65, 65); /* rouge lisible */
 }
 
 @media (prefers-color-scheme: light){
   :root{
     --bg:#fff;
     --fg:#000;
-    --muted:rgba(0,0,0,.7);
     --bar-bg:rgba(255,255,255,.92);
     --hair:rgba(0,0,0,.12);
     --sheet:rgba(255,255,255,.35);
     --cover-bg:rgba(0,0,0,.04);
+
+    --fxText: rgb(200, 0, 0);
   }
 }
 
 *{ box-sizing:border-box; }
 
-/* IMPORTANT: fond transparent pour ne pas masquer le calque #bg-layer (fix iOS) */
 html, body{
   margin:0;
   min-height:100%;
-  background: transparent;
+  background:var(--bg);
   color:var(--fg);
   font-family:Arial, sans-serif;
 }
 
-/* Calque de fond (fix iOS: pas de z-index négatif) */
-#bg-layer{
-  position:fixed;
-  inset:0;
-  z-index:0;
-  pointer-events:none;
-
-  /* fond neutre par défaut */
-  background: var(--bg);
-
-  /* le gradient sera injecté via JS */
-  opacity:0;
-  filter:saturate(1);
-  transition:
-    opacity var(--bgOpacityDur) ease,
-    filter var(--bgFilterDur) ease;
+/* Transitions globales (fond + couleur texte) */
+body{
+  transition: background 3s ease, color 3s ease;
 }
 
-/* États du fond */
-body.bg-on #bg-layer{
-  opacity:1;
-  filter:saturate(1);
-}
-body.bg-desat #bg-layer{
-  filter:saturate(0.06);
-}
-body.bg-off #bg-layer{
-  opacity:0;
+/* Quand l’effet est actif : le texte devient rouge (fade grâce à transition) */
+body.fx{
+  color: var(--fxText);
 }
 
 /* Frame séparée en haut */
@@ -104,12 +82,6 @@ body.bg-off #bg-layer{
   padding:26px 18px 44px;
 }
 
-/* IMPORTANT: contenu au-dessus du fond (fix iOS layering) */
-.topbar, .main{
-  position:relative;
-  z-index:1;
-}
-
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
@@ -118,7 +90,7 @@ body.bg-off #bg-layer{
 
 .card{
   text-decoration:none;
-  color:var(--fg);
+  color:inherit; /* IMPORTANT: suit le body (blanc->rouge) */
   display:block;
 }
 
@@ -130,7 +102,7 @@ body.bg-off #bg-layer{
 .cover{
   width:100%;
   aspect-ratio:1/1;
-  object-fit:contain;
+  object-fit:contain;        /* affiche toute la pochette */
   background:var(--cover-bg);
   display:block;
   transition:transform .22s ease, filter .22s ease;
@@ -147,7 +119,7 @@ body.bg-off #bg-layer{
   font-size:16px;
   font-weight:700;
   letter-spacing:3px;
-  color:#fff;
+  color:#fff; /* reste blanc pour la lisibilité */
   opacity:0;
   transition:opacity .22s ease;
   pointer-events:none;
@@ -164,8 +136,8 @@ body.bg-off #bg-layer{
   font-family:"Courier New", Courier, monospace;
   font-size:10px;
   text-transform:uppercase;
-  color:var(--muted);
   text-align:center;
+  opacity:.78;          /* au lieu d’une couleur fixe: suit le body */
 }
 
 /* Footer insta */
@@ -178,7 +150,7 @@ body.bg-off #bg-layer{
 .instagram{
   width:18px;
   height:18px;
-  fill:var(--fg);
+  fill:currentColor;    /* IMPORTANT: suit le body (blanc->rouge) */
   opacity:.6;
   transition:opacity .2s ease;
 }
@@ -191,18 +163,14 @@ body.bg-off #bg-layer{
   }
 }
 
-/* Réduit les animations si l’utilisateur le préfère */
 @media (prefers-reduced-motion: reduce){
-  #bg-layer{ transition:none; }
+  body{ transition:none; }
   .cover, .year, .instagram{ transition:none; }
 }
 </style>
 </head>
 
 <body>
-  <!-- Calque gradient -->
-  <div id="bg-layer" aria-hidden="true"></div>
-
   <header class="topbar">
     <div class="topbar-inner">
       <h1>HOKUBE</h1>
@@ -289,33 +257,20 @@ body.bg-off #bg-layer{
 
 <script>
 /**
- * Shake behavior:
- * 1) Shake -> gradient fade-in (lent)
- * 2) 10s sans shake -> désaturation lente
- * 3) Puis extinction vers fond neutre
- *
+ * Shake:
+ * - gradient fade-in 3s + texte -> rouge (CSS transition)
+ * - après 5s : retour au neutre (fade-out 3s) + texte normal
  * iOS: nécessite "ENABLE MOTION" (permission capteurs)
  */
-
-const bgLayer = document.getElementById("bg-layer");
 
 let lastTime = 0;
 const shakeThreshold = 14;
 let lastX = null, lastY = null, lastZ = null;
 
-const DESAT_AFTER_MS = 10000;      // 10s sans shake
-const DESAT_DUR_MS   = 7000;       // durée de désaturation
-const FADEOUT_DUR_MS = 6000;       // durée d'extinction
+const RESET_AFTER_MS = 5000; // 5s après le shake
+let resetTimer = null;
 
-let desatTimer = null;
-let fadeTimer = null;
-
-function setBgDurations(opacityDur, filterDur){
-  document.documentElement.style.setProperty("--bgOpacityDur", opacityDur);
-  document.documentElement.style.setProperty("--bgFilterDur", filterDur);
-}
-
-/* Tons froids uniquement: 140..290 (verts->cyans->bleus->violets) */
+/* Tons froids uniquement: 140..290 (évite jaune/rose) */
 function coolPastelHsl(){
   const h = 140 + Math.floor(Math.random() * (290 - 140 + 1));
   const s = 42 + Math.floor(Math.random() * 14); // 42–56%
@@ -323,48 +278,27 @@ function coolPastelHsl(){
   return `hsl(${h} ${s}% ${l}%)`;
 }
 
-function applyNewGradient(){
+function applyGradient(){
   const c1 = coolPastelHsl();
   const c2 = coolPastelHsl();
   const c3 = coolPastelHsl();
-  bgLayer.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
+  document.body.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
+  document.body.classList.add("fx"); // texte -> rouge (fade)
 }
 
-function clearTimers(){
-  if(desatTimer) clearTimeout(desatTimer);
-  if(fadeTimer) clearTimeout(fadeTimer);
-  desatTimer = null;
-  fadeTimer = null;
+function resetNeutral(){
+  document.body.style.background = ""; // revient à var(--bg) via CSS (fade-out)
+  document.body.classList.remove("fx"); // texte -> normal (fade)
 }
 
-function scheduleDesatAndFade(){
-  clearTimers();
-
-  desatTimer = setTimeout(() => {
-    // Désaturation lente
-    setBgDurations("5s", (DESAT_DUR_MS/1000) + "s");
-    document.body.classList.add("bg-desat");
-
-    // Puis extinction
-    fadeTimer = setTimeout(() => {
-      setBgDurations((FADEOUT_DUR_MS/1000) + "s", "1.2s");
-      document.body.classList.add("bg-off");
-      document.body.classList.remove("bg-on");
-    }, DESAT_DUR_MS);
-
-  }, DESAT_AFTER_MS);
+function scheduleReset(){
+  if(resetTimer) clearTimeout(resetTimer);
+  resetTimer = setTimeout(resetNeutral, RESET_AFTER_MS);
 }
 
-function triggerGradient(){
-  // Fade-in lent
-  setBgDurations("5s", "1.2s");
-
-  applyNewGradient();
-  document.body.classList.remove("bg-off");
-  document.body.classList.remove("bg-desat");
-  document.body.classList.add("bg-on");
-
-  scheduleDesatAndFade();
+function triggerFx(){
+  applyGradient();
+  scheduleReset();
 }
 
 function handleMotion(event){
@@ -379,7 +313,7 @@ function handleMotion(event){
     if(dx + dy + dz > shakeThreshold){
       const now = Date.now();
       if(now - lastTime > 900){
-        triggerGradient();
+        triggerFx();
         lastTime = now;
       }
     }
