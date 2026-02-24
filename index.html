@@ -13,6 +13,7 @@
   --bar-bg:rgba(0,0,0,.92);
   --hair:rgba(255,255,255,.12);
   --sheet:rgba(0,0,0,.35);
+  --cover-bg:rgba(0,0,0,.15);
 }
 
 @media (prefers-color-scheme: light){
@@ -23,6 +24,7 @@
     --bar-bg:rgba(255,255,255,.92);
     --hair:rgba(0,0,0,.12);
     --sheet:rgba(255,255,255,.35);
+    --cover-bg:rgba(0,0,0,.04);
   }
 }
 
@@ -31,12 +33,12 @@
 html, body{
   height:100%;
   margin:0;
-  background:var(--bg);
+  background:var(--bg);   /* fond NEUTRE par défaut */
   color:var(--fg);
   font-family:Arial, sans-serif;
 }
 
-/* On applique le dégradé sur body, mais on garde une "sheet" lisible par-dessus */
+/* On changera le background de body uniquement au shake */
 body{
   min-height:100%;
   transition: background 0.8s ease;
@@ -66,7 +68,7 @@ body{
   font-size:14px;
 }
 
-/* Contenu scrollable */
+/* Contenu */
 .main{
   max-width:1100px;
   margin:0 auto;
@@ -79,7 +81,6 @@ body{
   gap:26px;
 }
 
-/* Carte */
 .card{
   text-decoration:none;
   color:var(--fg);
@@ -94,13 +95,12 @@ body{
 .cover{
   width:100%;
   aspect-ratio:1/1;
-  object-fit:contain;     /* affiche toute la pochette */
-  background:rgba(0,0,0,.15);
+  object-fit:contain;        /* affiche toute la pochette */
+  background:var(--cover-bg);
   display:block;
   transition:transform .22s ease, filter .22s ease;
 }
 
-/* Overlay année */
 .year{
   position:absolute;
   inset:0;
@@ -121,10 +121,7 @@ body{
   transform:scale(1.02);
   filter:brightness(70%);
 }
-
-.card:hover .year{
-  opacity:1;
-}
+.card:hover .year{ opacity:1; }
 
 .title{
   margin-top:10px;
@@ -135,7 +132,6 @@ body{
   text-align:center;
 }
 
-/* Footer insta */
 .footer{
   display:flex;
   justify-content:center;
@@ -151,7 +147,6 @@ body{
 }
 .instagram:hover{ opacity:1; }
 
-/* Mobile */
 @media (max-width:520px){
   .grid{
     grid-template-columns:repeat(2, minmax(0, 1fr));
@@ -159,7 +154,6 @@ body{
   }
 }
 
-/* Réduit les animations si l’utilisateur le préfère */
 @media (prefers-reduced-motion: reduce){
   body{ transition:none; }
   .cover, .year, .instagram{ transition:none; }
@@ -255,26 +249,32 @@ body{
 
 <script>
 /**
- * SHAKE -> dégradé pastel aléatoire
- * - Android: OK direct
- * - iOS: nécessite un tap sur "Enable Motion" (permission capteurs)
+ * SHAKE -> dégradé pastel (tons froids) aléatoire
+ * - Fond reste neutre tant qu'on ne shake pas.
+ * - iOS: nécessite un tap sur "ENABLE MOTION"
  */
 
 let lastTime = 0;
-const shakeThreshold = 14; // un peu plus sensible
+const shakeThreshold = 14;
 let lastX = null, lastY = null, lastZ = null;
 
-function pastelHsl(){
-  const h = Math.floor(Math.random() * 360);
-  const s = 55 + Math.floor(Math.random() * 15); // 55–70%
-  const l = 78 + Math.floor(Math.random() * 10); // 78–88% (pastel)
+/**
+ * Génère des teintes PASTEL lisibles en excluant :
+ * - jaune (≈40–75)
+ * - rose/magenta (≈300–360 et 0–20)
+ * On ne garde que des tons froids: 140–290 (verts -> cyans -> bleus -> violets)
+ */
+function coolPastelHsl(){
+  const h = 140 + Math.floor(Math.random() * (290 - 140 + 1)); // 140..290
+  const s = 45 + Math.floor(Math.random() * 15); // 45–60%
+  const l = 78 + Math.floor(Math.random() * 8);  // 78–86%
   return `hsl(${h} ${s}% ${l}%)`;
 }
 
-function randomPastelGradient(){
-  const c1 = pastelHsl();
-  const c2 = pastelHsl();
-  const c3 = pastelHsl();
+function randomCoolPastelGradient(){
+  const c1 = coolPastelHsl();
+  const c2 = coolPastelHsl();
+  const c3 = coolPastelHsl();
   document.body.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
 }
 
@@ -289,8 +289,8 @@ function handleMotion(event){
 
     if(dx + dy + dz > shakeThreshold){
       const now = Date.now();
-      if(now - lastTime > 900){ // anti-spam
-        randomPastelGradient();
+      if(now - lastTime > 900){
+        randomCoolPastelGradient();
         lastTime = now;
       }
     }
@@ -304,15 +304,15 @@ function handleMotion(event){
 function enableMotion(){
   if(typeof DeviceMotionEvent !== "undefined" &&
      typeof DeviceMotionEvent.requestPermission === "function"){
-      DeviceMotionEvent.requestPermission()
-        .then(res => {
-          if(res === "granted"){
-            window.addEventListener("devicemotion", handleMotion, { passive:true });
-            const b = document.getElementById("motionBtn");
-            if(b) b.remove();
-          }
-        })
-        .catch(()=>{});
+    DeviceMotionEvent.requestPermission()
+      .then(res => {
+        if(res === "granted"){
+          window.addEventListener("devicemotion", handleMotion, { passive:true });
+          const b = document.getElementById("motionBtn");
+          if(b) b.remove();
+        }
+      })
+      .catch(()=>{});
   } else {
     window.addEventListener("devicemotion", handleMotion, { passive:true });
   }
@@ -346,9 +346,6 @@ if(typeof DeviceMotionEvent !== "undefined" &&
 } else {
   window.addEventListener("devicemotion", handleMotion, { passive:true });
 }
-
-/* Gradient initial pastel (optionnel) */
-randomPastelGradient();
 </script>
 
 </body>
