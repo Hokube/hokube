@@ -14,6 +14,10 @@
   --hair:rgba(255,255,255,.12);
   --sheet:rgba(0,0,0,.35);
   --cover-bg:rgba(0,0,0,.15);
+
+  /* transitions du calque gradient (pilotées par JS) */
+  --bgOpacityDur: 5s;
+  --bgFilterDur: 1.2s;
 }
 
 @media (prefers-color-scheme: light){
@@ -31,17 +35,42 @@
 *{ box-sizing:border-box; }
 
 html, body{
-  height:100%;
   margin:0;
-  background:var(--bg);   /* fond NEUTRE par défaut */
+  min-height:100%;
+  background:var(--bg); /* fond neutre */
   color:var(--fg);
   font-family:Arial, sans-serif;
 }
 
-/* On changera le background de body uniquement au shake */
-body{
-  min-height:100%;
-  transition: background 0.8s ease;
+/* Calque de fond (résout iOS “gradient pas full height”) */
+#bg-layer{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+
+  /* le gradient sera injecté via JS */
+  background: transparent;
+
+  opacity:0;
+  filter:saturate(1);
+  transition:
+    opacity var(--bgOpacityDur) ease,
+    filter var(--bgFilterDur) ease;
+}
+
+/* États du fond */
+body.bg-on #bg-layer{
+  opacity:1;
+  filter:saturate(1);
+}
+body.bg-desat #bg-layer{
+  /* désaturation lente */
+  filter:saturate(0.06);
+}
+body.bg-off #bg-layer{
+  /* extinction */
+  opacity:0;
 }
 
 /* Frame séparée en haut */
@@ -156,145 +185,183 @@ body{
   }
 }
 
+/* Réduit les animations si l’utilisateur le préfère */
 @media (prefers-reduced-motion: reduce){
-  body{ transition:none; }
+  #bg-layer{ transition:none; }
   .cover, .year, .instagram{ transition:none; }
 }
 </style>
 </head>
 
 <body>
+  <!-- Calque gradient -->
+  <div id="bg-layer" aria-hidden="true"></div>
 
-<header class="topbar">
-  <div class="topbar-inner">
-    <h1>HOKUBE</h1>
-  </div>
-</header>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1>HOKUBE</h1>
+    </div>
+  </header>
 
-<main class="main">
-  <div class="grid">
+  <main class="main">
+    <div class="grid">
 
-    <a class="card" href="https://AlterK.lnk.to/ItsYours" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/c35add38d8863b9ff17f49214d0ce311/500x500-000000-80-0-0.jpg" alt="NO LOVE LOST">
-        <div class="year">2026</div>
-      </div>
-      <div class="title">NO LOVE LOST</div>
-    </a>
+      <a class="card" href="https://AlterK.lnk.to/ItsYours" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/c35add38d8863b9ff17f49214d0ce311/500x500-000000-80-0-0.jpg" alt="NO LOVE LOST">
+          <div class="year">2026</div>
+        </div>
+        <div class="title">NO LOVE LOST</div>
+      </a>
 
-    <a class="card" href="https://distrokid.com/hyperfollow/hokube/when-it-went-quiet-vol-2" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/728a4adffac9df9e590eaaf26b507c56/500x500-000000-80-0-0.jpg" alt="WHEN IT WENT QUIET, VOL.2">
-        <div class="year">2025</div>
-      </div>
-      <div class="title">WHEN IT WENT QUIET, VOL.2</div>
-    </a>
+      <a class="card" href="https://distrokid.com/hyperfollow/hokube/when-it-went-quiet-vol-2" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/728a4adffac9df9e590eaaf26b507c56/500x500-000000-80-0-0.jpg" alt="WHEN IT WENT QUIET, VOL.2">
+          <div class="year">2025</div>
+        </div>
+        <div class="title">WHEN IT WENT QUIET, VOL.2</div>
+      </a>
 
-    <a class="card" href="https://distrokid.com/hyperfollow/ishsankaraandhokube/blvck-hundred" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/8e6132c1795811e8e3bdfb1bb009f119/500x500-000000-80-0-0.jpg" alt="BLVCK HUNDRED">
-        <div class="year">2022</div>
-      </div>
-      <div class="title">BLVCK HUNDRED</div>
-    </a>
+      <a class="card" href="https://distrokid.com/hyperfollow/ishsankaraandhokube/blvck-hundred" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/8e6132c1795811e8e3bdfb1bb009f119/500x500-000000-80-0-0.jpg" alt="BLVCK HUNDRED">
+          <div class="year">2022</div>
+        </div>
+        <div class="title">BLVCK HUNDRED</div>
+      </a>
 
-    <a class="card" href="https://AlterK.lnk.to/WhenItWentQuietVol1" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/bdcee8337f6da598fd0aad7b8503b561/500x500-000000-80-0-0.jpg" alt="WHEN IT WENT QUIET, VOL.1">
-        <div class="year">2022</div>
-      </div>
-      <div class="title">WHEN IT WENT QUIET, VOL.1</div>
-    </a>
+      <a class="card" href="https://AlterK.lnk.to/WhenItWentQuietVol1" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/bdcee8337f6da598fd0aad7b8503b561/500x500-000000-80-0-0.jpg" alt="WHEN IT WENT QUIET, VOL.1">
+          <div class="year">2022</div>
+        </div>
+        <div class="title">WHEN IT WENT QUIET, VOL.1</div>
+      </a>
 
-    <a class="card" href="https://pschent.lnk.to/Hokube-Givelove-Getitback" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/cf59253dc3658e146032dcd6d4a60c0a/500x500-000000-80-0-0.jpg" alt="GIVE LOVE, GET IT BACK">
-        <div class="year">2020</div>
-      </div>
-      <div class="title">GIVE LOVE, GET IT BACK</div>
-    </a>
+      <a class="card" href="https://pschent.lnk.to/Hokube-Givelove-Getitback" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/cf59253dc3658e146032dcd6d4a60c0a/500x500-000000-80-0-0.jpg" alt="GIVE LOVE, GET IT BACK">
+          <div class="year">2020</div>
+        </div>
+        <div class="title">GIVE LOVE, GET IT BACK</div>
+      </a>
 
-    <a class="card" href="https://distrokid.com/hyperfollow/hokube/this-album-needs-a-title" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/4c9264eed54fbec9f7a185699c6342b7/500x500-000000-80-0-0.jpg" alt="THIS ALBUM NEEDS A TITLE">
-        <div class="year">2019</div>
-      </div>
-      <div class="title">THIS ALBUM NEEDS A TITLE</div>
-    </a>
+      <a class="card" href="https://distrokid.com/hyperfollow/hokube/this-album-needs-a-title" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/4c9264eed54fbec9f7a185699c6342b7/500x500-000000-80-0-0.jpg" alt="THIS ALBUM NEEDS A TITLE">
+          <div class="year">2019</div>
+        </div>
+        <div class="title">THIS ALBUM NEEDS A TITLE</div>
+      </a>
 
-    <a class="card" href="https://distrokid.com/hyperfollow/hokube/gaoU" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/f18444ff29b9aee19cb35f64d1ce1c1e/500x500-000000-80-0-0.jpg" alt="I HAD TO DO THIS AT SOME POINT">
-        <div class="year">2015</div>
-      </div>
-      <div class="title">I HAD TO DO THIS AT SOME POINT EP</div>
-    </a>
+      <a class="card" href="https://distrokid.com/hyperfollow/hokube/gaoU" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/f18444ff29b9aee19cb35f64d1ce1c1e/500x500-000000-80-0-0.jpg" alt="I HAD TO DO THIS AT SOME POINT">
+          <div class="year">2015</div>
+        </div>
+        <div class="title">I HAD TO DO THIS AT SOME POINT EP</div>
+      </a>
 
-    <a class="card" href="https://distrokid.com/hyperfollow/ishsankaraandhokubeandmikemef/tromlife" target="_blank" rel="noopener noreferrer">
-      <div class="cover-wrap">
-        <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/7280613520308035eb623ecae303d4c0/500x500-000000-80-0-0.jpg" alt="T.R.O.M.LIFE">
-        <div class="year">2019</div>
-      </div>
-      <div class="title">T.R.O.M.LIFE</div>
-    </a>
+      <a class="card" href="https://distrokid.com/hyperfollow/ishsankaraandhokubeandmikemef/tromlife" target="_blank" rel="noopener noreferrer">
+        <div class="cover-wrap">
+          <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/7280613520308035eb623ecae303d4c0/500x500-000000-80-0-0.jpg" alt="T.R.O.M.LIFE">
+          <div class="year">2019</div>
+        </div>
+        <div class="title">T.R.O.M.LIFE</div>
+      </a>
 
-  </div>
+    </div>
 
-  <div class="footer">
-    <a href="https://instagram.com/hokube" target="_blank" rel="noopener noreferrer" aria-label="Instagram Hokube">
-      <svg class="instagram" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M7 2C4.2 2 2 4.2 2 7v10c0 2.8 2.2 5 5 5h10c2.8 0 5-2.2 5-5V7c0-2.8-2.2-5-5-5H7zm10 2c1.7 0 3 1.3 3 3v10c0 1.7-1.3 3-3 3H7c-1.7 0-3-1.3-3-3V7c0-1.7 1.3-3 3-3h10zm-5 3.5A4.5 4.5 0 1 0 16.5 12 4.5 4.5 0 0 0 12 7.5zm0 7A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5zM17.8 6.2a1 1 0 1 0 1 1 1 1 0 0 0-1-1z"/>
-      </svg>
-    </a>
-  </div>
-</main>
+    <div class="footer">
+      <a href="https://instagram.com/hokube" target="_blank" rel="noopener noreferrer" aria-label="Instagram Hokube">
+        <svg class="instagram" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 2C4.2 2 2 4.2 2 7v10c0 2.8 2.2 5 5 5h10c2.8 0 5-2.2 5-5V7c0-2.8-2.2-5-5-5H7zm10 2c1.7 0 3 1.3 3 3v10c0 1.7-1.3 3-3 3H7c-1.7 0-3-1.3-3-3V7c0-1.7 1.3-3 3-3h10zm-5 3.5A4.5 4.5 0 1 0 16.5 12 4.5 4.5 0 0 0 12 7.5zm0 7A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5zM17.8 6.2a1 1 0 1 0 1 1 1 1 0 0 0-1-1z"/>
+        </svg>
+      </a>
+    </div>
+  </main>
 
 <script>
 /**
- * SHAKE -> dégradé pastel tons froids
- * + auto-reset au fond neutre après X secondes sans shake
- * + reset en fondu lent (3s)
+ * Shake behavior:
+ * 1) Shake -> gradient fade-in 5s (lisible, tons froids)
+ * 2) 10s sans shake -> désaturation lente
+ * 3) Puis extinction vers fond neutre
+ *
+ * iOS: nécessite "ENABLE MOTION" (permission capteurs)
  */
+
+const bgLayer = document.getElementById("bg-layer");
 
 let lastTime = 0;
 const shakeThreshold = 14;
 let lastX = null, lastY = null, lastZ = null;
 
-const RESET_AFTER_MS = 12000; // 12 secondes
-let resetTimer = null;
+const DESAT_AFTER_MS = 10000;      // 10s sans shake
+const DESAT_DUR_MS   = 7000;       // durée de désaturation
+const FADEOUT_DUR_MS = 6000;       // durée d'extinction
 
-/* Tons froids uniquement: 140..290 (verts -> cyans -> bleus -> violets) */
+let desatTimer = null;
+let fadeTimer = null;
+
+function setBgDurations(opacityDur, filterDur){
+  document.documentElement.style.setProperty("--bgOpacityDur", opacityDur);
+  document.documentElement.style.setProperty("--bgFilterDur", filterDur);
+}
+
+/* Tons froids uniquement: 140..290 (verts->cyans->bleus->violets)
+   On évite jaune/rose, et on garde un pastel lisible. */
 function coolPastelHsl(){
   const h = 140 + Math.floor(Math.random() * (290 - 140 + 1));
-  const s = 45 + Math.floor(Math.random() * 15); // 45–60%
-  const l = 78 + Math.floor(Math.random() * 8);  // 78–86%
+  const s = 42 + Math.floor(Math.random() * 14); // 42–56%
+  const l = 76 + Math.floor(Math.random() * 8);  // 76–84%
   return `hsl(${h} ${s}% ${l}%)`;
 }
 
-function randomCoolPastelGradient(){
+function applyNewGradient(){
   const c1 = coolPastelHsl();
   const c2 = coolPastelHsl();
   const c3 = coolPastelHsl();
-
-  // Transition rapide pour apparition
-  document.body.style.transition = "background 0.8s ease";
-  document.body.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
+  bgLayer.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
 }
 
-function resetToNeutral(){
-  // Transition lente pour retour neutre
-  document.body.style.transition = "background 3s ease";
-  document.body.style.background = ""; // revient au background CSS (noir/blanc)
+function clearTimers(){
+  if(desatTimer) clearTimeout(desatTimer);
+  if(fadeTimer) clearTimeout(fadeTimer);
+  desatTimer = null;
+  fadeTimer = null;
 }
 
-function scheduleReset(){
-  if(resetTimer) clearTimeout(resetTimer);
-  resetTimer = setTimeout(resetToNeutral, RESET_AFTER_MS);
+function scheduleDesatAndFade(){
+  clearTimers();
+
+  desatTimer = setTimeout(() => {
+    // Désaturation lente
+    setBgDurations("5s", (DESAT_DUR_MS/1000) + "s");
+    document.body.classList.add("bg-desat");
+
+    // Puis extinction
+    fadeTimer = setTimeout(() => {
+      setBgDurations((FADEOUT_DUR_MS/1000) + "s", "1.2s");
+      document.body.classList.add("bg-off");
+      document.body.classList.remove("bg-on");
+      // On garde bg-desat (pas grave), ou on peut nettoyer plus tard.
+    }, DESAT_DUR_MS);
+
+  }, DESAT_AFTER_MS);
 }
 
 function triggerGradient(){
-  randomCoolPastelGradient();
-  scheduleReset();
+  // Fade-in 5s
+  setBgDurations("5s", "1.2s");
+
+  // Nouveau gradient + état actif
+  applyNewGradient();
+  document.body.classList.remove("bg-off");
+  document.body.classList.remove("bg-desat");
+  document.body.classList.add("bg-on");
+
+  scheduleDesatAndFade();
 }
 
 function handleMotion(event){
@@ -363,6 +430,7 @@ if(typeof DeviceMotionEvent !== "undefined" &&
 
   document.body.appendChild(btn);
 } else {
+  // Android / desktop: on écoute quand même, mais pas de gradient tant qu'il n'y a pas de shake
   window.addEventListener("devicemotion", handleMotion, { passive:true });
 }
 </script>
