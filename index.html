@@ -101,6 +101,7 @@ body{
   transition:transform .22s ease, filter .22s ease;
 }
 
+/* Overlay année */
 .year{
   position:absolute;
   inset:0;
@@ -132,6 +133,7 @@ body{
   text-align:center;
 }
 
+/* Footer insta */
 .footer{
   display:flex;
   justify-content:center;
@@ -225,7 +227,7 @@ body{
         <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/f18444ff29b9aee19cb35f64d1ce1c1e/500x500-000000-80-0-0.jpg" alt="I HAD TO DO THIS AT SOME POINT">
         <div class="year">2015</div>
       </div>
-      <div class="title">I HAD TO DO THIS AT SOME POINT</div>
+      <div class="title">I HAD TO DO THIS AT SOME POINT EP</div>
     </a>
 
     <a class="card" href="https://distrokid.com/hyperfollow/ishsankaraandhokubeandmikemef/tromlife" target="_blank" rel="noopener noreferrer">
@@ -250,7 +252,8 @@ body{
 <script>
 /**
  * SHAKE -> dégradé pastel tons froids
- * + auto-reset en fondu lent
+ * + auto-reset au fond neutre après X secondes sans shake
+ * + reset en fondu lent (3s)
  */
 
 let lastTime = 0;
@@ -260,11 +263,11 @@ let lastX = null, lastY = null, lastZ = null;
 const RESET_AFTER_MS = 12000; // 12 secondes
 let resetTimer = null;
 
-/* Tons froids uniquement: 140..290 */
+/* Tons froids uniquement: 140..290 (verts -> cyans -> bleus -> violets) */
 function coolPastelHsl(){
   const h = 140 + Math.floor(Math.random() * (290 - 140 + 1));
-  const s = 45 + Math.floor(Math.random() * 15);
-  const l = 78 + Math.floor(Math.random() * 8);
+  const s = 45 + Math.floor(Math.random() * 15); // 45–60%
+  const l = 78 + Math.floor(Math.random() * 8);  // 78–86%
   return `hsl(${h} ${s}% ${l}%)`;
 }
 
@@ -275,14 +278,13 @@ function randomCoolPastelGradient(){
 
   // Transition rapide pour apparition
   document.body.style.transition = "background 0.8s ease";
-  document.body.style.background =
-    `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
+  document.body.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
 }
 
 function resetToNeutral(){
   // Transition lente pour retour neutre
   document.body.style.transition = "background 3s ease";
-  document.body.style.background = "";
+  document.body.style.background = ""; // revient au background CSS (noir/blanc)
 }
 
 function scheduleReset(){
@@ -332,10 +334,10 @@ function enableMotion(){
       .catch(()=>{});
   } else {
     window.addEventListener("devicemotion", handleMotion, { passive:true });
-}
+  }
 }
 
-/* iOS bouton permission */
+/* iOS: bouton permission */
 if(typeof DeviceMotionEvent !== "undefined" &&
    typeof DeviceMotionEvent.requestPermission === "function"){
   const btn = document.createElement("button");
