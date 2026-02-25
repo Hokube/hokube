@@ -28,7 +28,7 @@
 <meta name="twitter:title" content="HOKUBE">
 <meta name="twitter:description" content="HOKUBE — albums & hidden beat lab.">
 <meta name="twitter:image" content="https://hokube.lu/favicon-32x32.png">
-  
+
 <style>
 :root{
   --bg:#000;
@@ -205,6 +205,34 @@ body.fx::before{ opacity:1; }
 }
 .instagram:hover{ opacity:1; }
 
+/* --- ABOUT (minimal) --- */
+.about{
+  max-width:620px;
+  margin:44px auto 10px;
+  padding:0 10px;
+  text-align:center;
+  font-family:"Courier New", Courier, monospace;
+  font-size:11px;
+  letter-spacing:1.5px;
+  line-height:1.9;
+
+  opacity:0;
+  transform:translateY(16px);
+  transition:opacity 1.1s ease, transform 1.1s ease;
+}
+
+.about.visible{
+  opacity:.65;
+  transform:translateY(0);
+}
+
+.about::before{
+  content:"—";
+  display:block;
+  margin:18px auto 26px;
+  opacity:.5;
+}
+
 /* ---- Drum machine ---- */
 .hidden{ display:none !important; }
 
@@ -361,6 +389,7 @@ body.fx::before{ opacity:1; }
   body{ transition:none; }
   body::before{ transition:none; }
   .cover, .year, .instagram{ transition:none; }
+  .about{ transition:none; transform:none; opacity:.65; }
 }
 </style>
 </head>
@@ -450,6 +479,12 @@ body.fx::before{ opacity:1; }
             <path d="M7 2C4.2 2 2 4.2 2 7v10c0 2.8 2.2 5 5 5h10c2.8 0 5-2.2 5-5V7c0-2.8-2.2-5-5-5H7zm10 2c1.7 0 3 1.3 3 3v10c0 1.7-1.3 3-3 3H7c-1.7 0-3-1.3-3-3V7c0-1.7 1.3-3 3-3h10zm-5 3.5A4.5 4.5 0 1 0 16.5 12 4.5 4.5 0 0 0 12 7.5zm0 7A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5zM17.8 6.2a1 1 0 1 0 1 1 1 1 0 0 0-1-1z"/>
           </svg>
         </a>
+      </div>
+
+      <!-- ABOUT (sous Instagram) -->
+      <div class="about" id="about">
+        HOKUBE is a Gabonese producer based in Luxembourg.<br>
+        Hip-hop at the core, shaped by diverse influences and a taste for color, rhythm and depth.
       </div>
     </div>
 
@@ -624,6 +659,20 @@ brand.addEventListener("keydown", (e) => {
     toggleView();
   }
 });
+
+/* ---------------- About: apparition au scroll ---------------- */
+const aboutEl = document.getElementById("about");
+if(aboutEl){
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        aboutEl.classList.add("visible");
+        io.disconnect();
+      }
+    });
+  }, { threshold: 0.35 });
+  io.observe(aboutEl);
+}
 
 /* ---------------- Drum machine (Accent + Swing) ---------------- */
 const stepgridEl = document.getElementById("stepgrid");
@@ -858,12 +907,6 @@ function stepDurationSec(){
   return (60 / bpm) / 4; // 16èmes
 }
 
-/**
- * Swing:
- * - slider 50..75
- * - 50 = straight
- * - on retarde les steps impaires (1,3,5...) dans chaque paire (2*16ème)
- */
 function swingDelaySec(){
   const s = Number(swingEl.value);     // 50..75
   const step = stepDurationSec();
@@ -899,7 +942,7 @@ async function start(){
     tracks.forEach(tr => {
       const v = pattern[tr.id][stepIndex]; // 0/1/2
       if(v){
-        const vel = (v === 2) ? 1.0 : 0.72; // accent vs normal
+        const vel = (v === 2) ? 1.0 : 0.72;
         playSound(tr.id, t, vel);
       }
     });
