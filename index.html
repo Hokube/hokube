@@ -16,6 +16,7 @@
 
   /* FX */
   --fxText: rgb(255, 65, 65); /* rouge lisible */
+  --fxGradient: transparent;  /* sera injecté via JS */
 }
 
 @media (prefers-color-scheme: light){
@@ -39,16 +40,35 @@ html, body{
   background:var(--bg);
   color:var(--fg);
   font-family:Arial, sans-serif;
+
+  /* TEXTE EN GRAS (global) */
+  font-weight:700;
 }
 
-/* Transitions globales (fond + couleur texte) */
+/* Transitions globales */
 body{
-  transition: background 3s ease, color 3s ease;
+  position:relative;
+  transition: color 5s ease; /* texte -> rouge / retour normal en 5s */
 }
 
-/* Quand l’effet est actif : le texte devient rouge (fade grâce à transition) */
+/* Couche gradient animée (par-dessus le fond de base) */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;                 /* derrière tout */
+  pointer-events:none;
+  opacity:0;
+  transition: opacity 5s ease; /* fade in/out 5s */
+  background: var(--fxGradient, transparent);
+}
+
+/* Quand l’effet est actif : texte rouge + gradient visible */
 body.fx{
   color: var(--fxText);
+}
+body.fx::before{
+  opacity:1;
 }
 
 /* Frame séparée en haut */
@@ -70,7 +90,7 @@ body.fx{
 
 .topbar h1{
   margin:0;
-  font-weight:normal;
+  font-weight:700; /* gras */
   letter-spacing:6px;
   font-size:14px;
 }
@@ -90,7 +110,7 @@ body.fx{
 
 .card{
   text-decoration:none;
-  color:inherit; /* IMPORTANT: suit le body (blanc->rouge) */
+  color:inherit; /* suit le body */
   display:block;
 }
 
@@ -102,7 +122,7 @@ body.fx{
 .cover{
   width:100%;
   aspect-ratio:1/1;
-  object-fit:contain;        /* affiche toute la pochette */
+  object-fit:contain;
   background:var(--cover-bg);
   display:block;
   transition:transform .22s ease, filter .22s ease;
@@ -119,7 +139,7 @@ body.fx{
   font-size:16px;
   font-weight:700;
   letter-spacing:3px;
-  color:#fff; /* reste blanc pour la lisibilité */
+  color:#fff;
   opacity:0;
   transition:opacity .22s ease;
   pointer-events:none;
@@ -137,7 +157,8 @@ body.fx{
   font-size:10px;
   text-transform:uppercase;
   text-align:center;
-  opacity:.78;          /* au lieu d’une couleur fixe: suit le body */
+  opacity:.78;
+  font-weight:700; /* gras */
 }
 
 /* Footer insta */
@@ -150,7 +171,7 @@ body.fx{
 .instagram{
   width:18px;
   height:18px;
-  fill:currentColor;    /* IMPORTANT: suit le body (blanc->rouge) */
+  fill:currentColor;
   opacity:.6;
   transition:opacity .2s ease;
 }
@@ -165,6 +186,7 @@ body.fx{
 
 @media (prefers-reduced-motion: reduce){
   body{ transition:none; }
+  body::before{ transition:none; }
   .cover, .year, .instagram{ transition:none; }
 }
 </style>
@@ -258,8 +280,8 @@ body.fx{
 <script>
 /**
  * Shake:
- * - gradient fade-in 3s + texte -> rouge (CSS transition)
- * - après 5s : retour au neutre (fade-out 3s) + texte normal
+ * - gradient fade-in 5s + texte -> rouge (transition 5s)
+ * - après 5s : retour au neutre (fade-out 5s) + texte normal
  * iOS: nécessite "ENABLE MOTION" (permission capteurs)
  */
 
@@ -267,7 +289,7 @@ let lastTime = 0;
 const shakeThreshold = 14;
 let lastX = null, lastY = null, lastZ = null;
 
-const RESET_AFTER_MS = 5000; // 5s après le shake
+const RESET_AFTER_MS = 5000; // 5s plein avant de repartir
 let resetTimer = null;
 
 /* Tons froids uniquement: 140..290 (évite jaune/rose) */
@@ -282,13 +304,23 @@ function applyGradient(){
   const c1 = coolPastelHsl();
   const c2 = coolPastelHsl();
   const c3 = coolPastelHsl();
-  document.body.style.background = `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`;
-  document.body.classList.add("fx"); // texte -> rouge (fade)
+
+  // On injecte le gradient dans une variable CSS (utilisée par body::before)
+  document.body.style.setProperty(
+    "--fxGradient",
+    `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`
+  );
+
+  document.body.classList.add("fx"); // fade-in 5s + texte rouge
 }
 
 function resetNeutral(){
-  document.body.style.background = ""; // revient à var(--bg) via CSS (fade-out)
-  document.body.classList.remove("fx"); // texte -> normal (fade)
+  document.body.classList.remove("fx"); // fade-out 5s + texte normal
+
+  // Nettoyage du gradient après la fin de la transition
+  setTimeout(() => {
+    document.body.style.removeProperty("--fxGradient");
+  }, 5200);
 }
 
 function scheduleReset(){
