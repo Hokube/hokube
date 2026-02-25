@@ -16,7 +16,7 @@
 
   /* FX */
   --fxText: rgb(255, 65, 65); /* rouge lisible */
-  --fxGradient: transparent;  /* sera injecté via JS */
+  --fxGradient: transparent;  /* injecté via JS */
 }
 
 @media (prefers-color-scheme: light){
@@ -45,7 +45,6 @@ html, body{
   font-weight:700;
 }
 
-/* Transitions globales */
 body{
   position:relative;
   transition: color 5s ease; /* texte -> rouge / retour normal en 5s */
@@ -56,14 +55,14 @@ body::before{
   content:"";
   position:fixed;
   inset:0;
-  z-index:-1;                 /* derrière tout */
+  z-index:-1;
   pointer-events:none;
   opacity:0;
   transition: opacity 5s ease; /* fade in/out 5s */
   background: var(--fxGradient, transparent);
 }
 
-/* Quand l’effet est actif : texte rouge + gradient visible */
+/* FX actif */
 body.fx{
   color: var(--fxText);
 }
@@ -90,7 +89,7 @@ body.fx::before{
 
 .topbar h1{
   margin:0;
-  font-weight:700; /* gras */
+  font-weight:700;
   letter-spacing:6px;
   font-size:14px;
 }
@@ -110,7 +109,7 @@ body.fx::before{
 
 .card{
   text-decoration:none;
-  color:inherit; /* suit le body */
+  color:inherit;
   display:block;
 }
 
@@ -158,7 +157,7 @@ body.fx::before{
   text-transform:uppercase;
   text-align:center;
   opacity:.78;
-  font-weight:700; /* gras */
+  font-weight:700;
 }
 
 /* Footer insta */
@@ -280,8 +279,9 @@ body.fx::before{
 <script>
 /**
  * Shake:
- * - gradient fade-in 5s + texte -> rouge (transition 5s)
- * - après 5s : retour au neutre (fade-out 5s) + texte normal
+ * - fade-in gradient 5s
+ * - reste PLEIN 5s
+ * - fade-out gradient 5s (retour au fond de base)
  * iOS: nécessite "ENABLE MOTION" (permission capteurs)
  */
 
@@ -289,7 +289,10 @@ let lastTime = 0;
 const shakeThreshold = 14;
 let lastX = null, lastY = null, lastZ = null;
 
-const RESET_AFTER_MS = 5000; // 5s plein avant de repartir
+const FADE_MS = 5000; // durée fade-in et fade-out
+const HOLD_MS = 5000; // durée "plein"
+const RESET_AFTER_MS = FADE_MS + HOLD_MS; // on commence le fade-out après fade-in + hold
+
 let resetTimer = null;
 
 /* Tons froids uniquement: 140..290 (évite jaune/rose) */
@@ -305,22 +308,21 @@ function applyGradient(){
   const c2 = coolPastelHsl();
   const c3 = coolPastelHsl();
 
-  // On injecte le gradient dans une variable CSS (utilisée par body::before)
   document.body.style.setProperty(
     "--fxGradient",
     `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`
   );
 
-  document.body.classList.add("fx"); // fade-in 5s + texte rouge
+  document.body.classList.add("fx"); // fade-in 5s + texte rouge (transition CSS)
 }
 
 function resetNeutral(){
-  document.body.classList.remove("fx"); // fade-out 5s + texte normal
+  document.body.classList.remove("fx"); // déclenche fade-out 5s + texte normal
 
-  // Nettoyage du gradient après la fin de la transition
+  // Nettoyage du gradient après la fin du fade-out
   setTimeout(() => {
     document.body.style.removeProperty("--fxGradient");
-  }, 5200);
+  }, FADE_MS + 200);
 }
 
 function scheduleReset(){
