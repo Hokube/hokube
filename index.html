@@ -727,11 +727,21 @@ function buildGrid(){
         b.classList.toggle("accent", v === 2);
       };
 
-      b.addEventListener("click", () => {
-        const v = pattern[t.id][i];
-        const next = (v + 1) % 3; // 0->1->2->0
-        pattern[t.id][i] = next;
-        render();
+ b.addEventListener("click", () => {
+  const v = pattern[t.id][i];
+
+  let next;
+
+  if (t.id === "kick") {
+    // Kick : OFF -> ON -> ACCENT -> OFF
+    next = (v + 1) % 3;
+  } else {
+    // Autres : OFF -> ON -> OFF
+    next = v === 1 ? 0 : 1;
+  }
+
+  pattern[t.id][i] = next;
+  render();
 
         if(audioReady()){
           const vel = next === 2 ? 1.0 : next === 1 ? 0.72 : 0;
