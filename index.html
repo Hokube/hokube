@@ -15,8 +15,14 @@
   --cover-bg:rgba(0,0,0,.15);
 
   /* FX */
-  --fxText: rgb(255, 65, 65); /* rouge lisible */
-  --fxGradient: transparent;  /* injecté via JS */
+  --fxText: rgb(255, 65, 65);
+  --fxGradient: transparent;
+
+  /* Grain */
+  --grainOpacity: .065;
+
+  /* "Audio sans audio" */
+  --vuOpacity: .7;
 }
 
 @media (prefers-color-scheme: light){
@@ -29,6 +35,7 @@
     --cover-bg:rgba(0,0,0,.04);
 
     --fxText: rgb(200, 0, 0);
+    --grainOpacity: .055;
   }
 }
 
@@ -55,20 +62,39 @@ body::before{
   content:"";
   position:fixed;
   inset:0;
-  z-index:-1;
+  z-index:-2;               /* derrière tout */
   pointer-events:none;
   opacity:0;
-  transition: opacity 5s ease; /* fade in/out 5s */
+  transition: opacity 5s ease;
   background: var(--fxGradient, transparent);
 }
 
+/* Grain overlay (au-dessus du gradient, sous le contenu) */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  opacity: var(--grainOpacity);
+  mix-blend-mode: soft-light;
+
+  /* SVG turbulence (grain) en data URI */
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'>\
+<filter id='n'>\
+  <feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/>\
+  <feColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .35 0'/>\
+</filter>\
+<rect width='100%25' height='100%25' filter='url(%23n)'/>\
+</svg>");
+  background-repeat: repeat;
+  background-size: 220px 220px;
+}
+
 /* FX actif */
-body.fx{
-  color: var(--fxText);
-}
-body.fx::before{
-  opacity:1;
-}
+body.fx{ color: var(--fxText); }
+body.fx::before{ opacity:1; }
 
 /* Frame séparée en haut */
 .topbar{
@@ -144,11 +170,15 @@ body.fx::before{
   pointer-events:none;
 }
 
-.card:hover .cover{
+.card:hover .cover,
+.card.touched .cover,
+.card:focus-visible .cover{
   transform:scale(1.02);
   filter:brightness(70%);
 }
-.card:hover .year{ opacity:1; }
+.card:hover .year,
+.card.touched .year,
+.card:focus-visible .year{ opacity:1; }
 
 .title{
   margin-top:10px;
@@ -158,6 +188,59 @@ body.fx::before{
   text-align:center;
   opacity:.78;
   font-weight:700;
+}
+
+/* "Audio sans audio" (mini VU meter) */
+.vumeter{
+  margin:8px auto 0;
+  width:42px;
+  height:10px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:3px;
+  opacity: var(--vuOpacity);
+}
+
+.vumeter span{
+  width:4px;
+  height:3px;                /* base */
+  background: currentColor;
+  border-radius:2px;
+  transform-origin: bottom;
+  transform: scaleY(.35);
+  filter: saturate(120%);
+  animation: vu 520ms infinite ease-in-out;
+  animation-play-state: paused;
+}
+
+/* variations par barre */
+.vumeter span:nth-child(1){ animation-duration: 560ms; animation-delay: -120ms; }
+.vumeter span:nth-child(2){ animation-duration: 480ms; animation-delay: -260ms; }
+.vumeter span:nth-child(3){ animation-duration: 620ms; animation-delay: -80ms;  }
+.vumeter span:nth-child(4){ animation-duration: 510ms; animation-delay: -200ms; }
+
+/* Active uniquement quand on interagit */
+.card:hover .vumeter span,
+.card.touched .vumeter span,
+.card:focus-visible .vumeter span{
+  animation-play-state: running;
+}
+
+/* Petite baisse sur les cartes non actives (optionnel mais agréable) */
+.grid:has(.card:hover) .card:not(:hover){
+  opacity:.82;
+}
+.grid:has(.card:focus-visible) .card:not(:focus-visible){
+  opacity:.82;
+}
+
+@keyframes vu{
+  0%   { transform: scaleY(.25); opacity:.55; }
+  20%  { transform: scaleY(.95); opacity:.95; }
+  45%  { transform: scaleY(.45); opacity:.75; }
+  70%  { transform: scaleY(.8);  opacity:.9; }
+  100% { transform: scaleY(.25); opacity:.55; }
 }
 
 /* Footer insta */
@@ -183,11 +266,14 @@ body.fx::before{
   }
 }
 
+/* Accessibilité perf */
 @media (prefers-reduced-motion: reduce){
   body{ transition:none; }
   body::before{ transition:none; }
   .cover, .year, .instagram{ transition:none; }
+  .vumeter span{ animation: none; transform: scaleY(.35); }
 }
+
 </style>
 </head>
 
@@ -207,6 +293,7 @@ body.fx::before{
           <div class="year">2026</div>
         </div>
         <div class="title">NO LOVE LOST</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
       <a class="card" href="https://distrokid.com/hyperfollow/hokube/when-it-went-quiet-vol-2" target="_blank" rel="noopener noreferrer">
@@ -215,6 +302,7 @@ body.fx::before{
           <div class="year">2025</div>
         </div>
         <div class="title">WHEN IT WENT QUIET, VOL.2</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
       <a class="card" href="https://distrokid.com/hyperfollow/ishsankaraandhokube/blvck-hundred" target="_blank" rel="noopener noreferrer">
@@ -223,6 +311,7 @@ body.fx::before{
           <div class="year">2022</div>
         </div>
         <div class="title">BLVCK HUNDRED</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
       <a class="card" href="https://AlterK.lnk.to/WhenItWentQuietVol1" target="_blank" rel="noopener noreferrer">
@@ -231,6 +320,7 @@ body.fx::before{
           <div class="year">2022</div>
         </div>
         <div class="title">WHEN IT WENT QUIET, VOL.1</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
       <a class="card" href="https://pschent.lnk.to/Hokube-Givelove-Getitback" target="_blank" rel="noopener noreferrer">
@@ -239,6 +329,7 @@ body.fx::before{
           <div class="year">2020</div>
         </div>
         <div class="title">GIVE LOVE, GET IT BACK</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
       <a class="card" href="https://distrokid.com/hyperfollow/hokube/this-album-needs-a-title" target="_blank" rel="noopener noreferrer">
@@ -247,6 +338,7 @@ body.fx::before{
           <div class="year">2019</div>
         </div>
         <div class="title">THIS ALBUM NEEDS A TITLE</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
       <a class="card" href="https://distrokid.com/hyperfollow/hokube/gaoU" target="_blank" rel="noopener noreferrer">
@@ -255,14 +347,16 @@ body.fx::before{
           <div class="year">2015</div>
         </div>
         <div class="title">I HAD TO DO THIS AT SOME POINT EP</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
       <a class="card" href="https://distrokid.com/hyperfollow/ishsankaraandhokubeandmikemef/tromlife" target="_blank" rel="noopener noreferrer">
         <div class="cover-wrap">
           <img class="cover" src="https://cdn-images.dzcdn.net/images/cover/7280613520308035eb623ecae303d4c0/500x500-000000-80-0-0.jpg" alt="T.R.O.M.LIFE">
-          <div class="year">2013</div>
+          <div class="year">2019</div>
         </div>
         <div class="title">T.R.O.M.LIFE</div>
+        <div class="vumeter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </a>
 
     </div>
@@ -281,18 +375,16 @@ body.fx::before{
  * Shake:
  * - fade-in gradient 5s
  * - reste PLEIN 5s
- * - fade-out gradient 5s (retour au fond de base)
- * iOS: nécessite "ENABLE MOTION" (permission capteurs)
+ * - fade-out gradient 5s
  */
 
 let lastTime = 0;
 const shakeThreshold = 14;
 let lastX = null, lastY = null, lastZ = null;
 
-const FADE_MS = 5000; // durée fade-in et fade-out
-const HOLD_MS = 5000; // durée "plein"
+const FADE_MS = 5000;
+const HOLD_MS = 5000;
 const RESET_AFTER_MS = FADE_MS + HOLD_MS; // on commence le fade-out après fade-in + hold
-
 let resetTimer = null;
 
 /* Tons froids uniquement: 140..290 (évite jaune/rose) */
@@ -313,13 +405,13 @@ function applyGradient(){
     `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`
   );
 
-  document.body.classList.add("fx"); // fade-in 5s + texte rouge (transition CSS)
+  document.body.classList.add("fx"); // fade-in 5s + texte rouge
 }
 
 function resetNeutral(){
-  document.body.classList.remove("fx"); // déclenche fade-out 5s + texte normal
+  document.body.classList.remove("fx"); // fade-out 5s + texte normal
 
-  // Nettoyage du gradient après la fin du fade-out
+  // Nettoyage du gradient après le fade-out
   setTimeout(() => {
     document.body.style.removeProperty("--fxGradient");
   }, FADE_MS + 200);
@@ -374,6 +466,24 @@ function enableMotion(){
     window.addEventListener("devicemotion", handleMotion, { passive:true });
   }
 }
+
+/* Desktop/mobile: déclenche un petit "touched" (pour activer VU + hover feel sur mobile) */
+(function enableTouchFeedback(){
+  const cards = document.querySelectorAll(".card");
+  let t = null;
+
+  function pulse(card){
+    card.classList.add("touched");
+    clearTimeout(t);
+    t = setTimeout(() => card.classList.remove("touched"), 650);
+  }
+
+  cards.forEach(card => {
+    card.addEventListener("pointerdown", (e) => {
+      if(e.pointerType === "touch") pulse(card);
+    }, { passive:true });
+  });
+})();
 
 /* iOS: bouton permission */
 if(typeof DeviceMotionEvent !== "undefined" &&
