@@ -40,13 +40,13 @@ html, body{
   background:var(--bg);
   color:var(--fg);
   font-family:Arial, sans-serif;
-  font-weight:700; /* texte en gras */
+  font-weight:700;
 }
 
 /* Transitions globales */
 body{
   position:relative;
-  transition: color 5s ease; /* texte -> rouge / retour normal en 5s */
+  transition: color 5s ease;
 }
 
 /* Couche gradient animée */
@@ -185,7 +185,7 @@ body.fx::before{ opacity:1; }
 .hidden{ display:none !important; }
 
 .drum{
-  max-width:900px;
+  max-width:980px;
   margin:0 auto;
   border:1px solid var(--hair);
   border-radius:18px;
@@ -232,14 +232,13 @@ body.fx::before{ opacity:1; }
   background-color:var(--sheet);
   backdrop-filter: blur(8px);
 }
-
 .btn:active{ transform: translateY(1px); }
 .btn:focus-visible{
   outline:2px solid currentColor;
   outline-offset:3px;
 }
 
-.bpm{
+.ctrl{
   display:flex;
   align-items:center;
   gap:10px;
@@ -247,10 +246,7 @@ body.fx::before{ opacity:1; }
   font-size:10px;
   letter-spacing:2px;
 }
-
-.bpm input[type="range"]{
-  width:160px;
-}
+.ctrl input[type="range"]{ width:160px; }
 
 .stepgrid{
   display:grid;
@@ -286,9 +282,27 @@ body.fx::before{ opacity:1; }
   overflow:hidden;
 }
 
+/* ON */
 .step.on{
   background: color-mix(in oklab, currentColor 18%, transparent);
   border-color: color-mix(in oklab, currentColor 45%, var(--hair));
+}
+
+/* ACCENT (plus fort) */
+.step.accent{
+  background: color-mix(in oklab, currentColor 30%, transparent);
+  border-color: color-mix(in oklab, currentColor 65%, var(--hair));
+}
+.step.accent::before{
+  content:"";
+  position:absolute;
+  left:7px;
+  top:7px;
+  width:6px;
+  height:6px;
+  border-radius:99px;
+  background: currentColor;
+  opacity:.75;
 }
 
 .step.playhead::after{
@@ -316,6 +330,7 @@ body.fx::before{ opacity:1; }
   }
   .stepgrid{ grid-template-columns: 70px 1fr; }
   .step{ height:32px; }
+  .ctrl input[type="range"]{ width:140px; }
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -329,7 +344,6 @@ body.fx::before{ opacity:1; }
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <!-- tabindex + role pour accessibilité clavier -->
       <h1 id="brand" tabindex="0" role="button" aria-pressed="false" aria-label="Basculer entre albums et boîte à rythme">HOKUBE</h1>
     </div>
   </header>
@@ -419,15 +433,22 @@ body.fx::before{ opacity:1; }
     <section id="drumView" class="hidden" aria-label="Boîte à rythme">
       <div class="drum">
         <div class="drum-top">
-          <div class="drum-title">VIRTUAL RHYTHM BOX / 16 STEPS</div>
+          <div class="drum-title">HOKUBE BEAT LAB / 16 STEPS</div>
 
           <div class="controls">
             <button class="btn" id="startStop" type="button">START</button>
 
-            <div class="bpm">
+            <div class="ctrl">
               <span>BPM</span>
               <input id="bpm" type="range" min="70" max="170" value="120">
               <span id="bpmVal">120</span>
+            </div>
+
+            <div class="ctrl">
+              <span>SWING</span>
+              <!-- 50 = straight, jusqu'à 75 = bien swingué -->
+              <input id="swing" type="range" min="50" max="75" value="50">
+              <span id="swingVal">50</span>
             </div>
 
             <button class="btn" id="clear" type="button">CLEAR</button>
@@ -436,7 +457,9 @@ body.fx::before{ opacity:1; }
 
         <div class="stepgrid" id="stepgrid"></div>
 
-        <div class="hint">Tip: Click on HOKUBE to return to the albums. (Audio only starts after interaction.)</div>
+        <div class="hint">
+          Click : OFF → ON → ACCENT. &nbsp; | &nbsp; Clique sur HOKUBE pour revenir aux albums.
+        </div>
       </div>
     </section>
 
@@ -453,7 +476,6 @@ const HOLD_MS = 5000;
 const RESET_AFTER_MS = FADE_MS + HOLD_MS;
 let resetTimer = null;
 
-/* Tons froids uniquement: 140..290 */
 function coolPastelHsl(){
   const h = 140 + Math.floor(Math.random() * (290 - 140 + 1));
   const s = 42 + Math.floor(Math.random() * 14);
@@ -471,9 +493,7 @@ function applyGradient(){
 
 function resetNeutral(){
   document.body.classList.remove("fx");
-  setTimeout(() => {
-    document.body.style.removeProperty("--fxGradient");
-  }, FADE_MS + 200);
+  setTimeout(() => document.body.style.removeProperty("--fxGradient"), FADE_MS + 200);
 }
 
 function scheduleReset(){
@@ -526,7 +546,6 @@ function enableMotion(){
   }
 }
 
-/* iOS: bouton permission */
 if(typeof DeviceMotionEvent !== "undefined" &&
    typeof DeviceMotionEvent.requestPermission === "function"){
   const btn = document.createElement("button");
@@ -570,7 +589,7 @@ function toggleView(){
     drumView.classList.add("hidden");
     albumsView.classList.remove("hidden");
     brand.setAttribute("aria-pressed", "false");
-    stop(); // stop la séquence quand on repart
+    stop();
   }
 }
 
@@ -582,10 +601,12 @@ brand.addEventListener("keydown", (e) => {
   }
 });
 
-/* ---------------- Drum machine (simple TR-ish) ---------------- */
+/* ---------------- Drum machine (Accent + Swing) ---------------- */
 const stepgridEl = document.getElementById("stepgrid");
 const bpmEl = document.getElementById("bpm");
 const bpmValEl = document.getElementById("bpmVal");
+const swingEl = document.getElementById("swing");
+const swingValEl = document.getElementById("swingVal");
 const startStopEl = document.getElementById("startStop");
 const clearEl = document.getElementById("clear");
 
@@ -597,10 +618,16 @@ const tracks = [
 ];
 
 const stepsCount = 16;
-let pattern = {};
-tracks.forEach(t => pattern[t.id] = new Array(stepsCount).fill(false));
 
-/* UI build */
+/**
+ * pattern[track][step] :
+ * 0 = off
+ * 1 = on
+ * 2 = accent
+ */
+let pattern = {};
+tracks.forEach(t => pattern[t.id] = new Array(stepsCount).fill(0));
+
 function buildGrid(){
   stepgridEl.innerHTML = "";
   tracks.forEach((t) => {
@@ -611,6 +638,7 @@ function buildGrid(){
 
     const steps = document.createElement("div");
     steps.className = "steps";
+
     for(let i=0;i<stepsCount;i++){
       const b = document.createElement("button");
       b.type = "button";
@@ -618,25 +646,37 @@ function buildGrid(){
       b.setAttribute("aria-label", `${t.name} step ${i+1}`);
       b.dataset.track = t.id;
       b.dataset.step = String(i);
+
+      const render = () => {
+        const v = pattern[t.id][i];
+        b.classList.toggle("on", v === 1 || v === 2);
+        b.classList.toggle("accent", v === 2);
+      };
+
       b.addEventListener("click", () => {
-        const tr = b.dataset.track;
-        const st = Number(b.dataset.step);
-        pattern[tr][st] = !pattern[tr][st];
-        b.classList.toggle("on", pattern[tr][st]);
-        // petit preview au clic si audio prêt
-        if(audioReady()) playSound(tr);
+        const v = pattern[t.id][i];
+        const next = (v + 1) % 3; // 0->1->2->0
+        pattern[t.id][i] = next;
+        render();
+
+        if(audioReady()){
+          const vel = next === 2 ? 1.0 : next === 1 ? 0.72 : 0;
+          if(vel > 0) playSound(t.id, ctx.currentTime, vel);
+        }
       });
+
+      render();
       steps.appendChild(b);
     }
+
     stepgridEl.appendChild(steps);
   });
 }
 buildGrid();
 
-/* BPM */
-bpmEl.addEventListener("input", () => {
-  bpmValEl.textContent = bpmEl.value;
-});
+/* Controls */
+bpmEl.addEventListener("input", () => bpmValEl.textContent = bpmEl.value);
+swingEl.addEventListener("input", () => swingValEl.textContent = swingEl.value);
 
 /* Audio (WebAudio) */
 let ctx = null;
@@ -658,20 +698,18 @@ async function ensureAudio(){
   }
 }
 
-function whiteNoiseBuffer(duration=0.2){
+function whiteNoiseBuffer(duration=0.25){
   const sampleRate = ctx.sampleRate;
   const length = Math.floor(sampleRate * duration);
   const buffer = ctx.createBuffer(1, length, sampleRate);
   const data = buffer.getChannelData(0);
-  for(let i=0;i<length;i++){
-    data[i] = (Math.random()*2 - 1);
-  }
+  for(let i=0;i<length;i++) data[i] = (Math.random()*2 - 1);
   return buffer;
 }
 
 let noiseBuf = null;
 
-function playKick(time = ctx.currentTime){
+function playKick(time, vel){
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
@@ -679,7 +717,8 @@ function playKick(time = ctx.currentTime){
   osc.frequency.setValueAtTime(140, time);
   osc.frequency.exponentialRampToValueAtTime(45, time + 0.12);
 
-  gain.gain.setValueAtTime(1.0, time);
+  const peak = 1.0 * vel;
+  gain.gain.setValueAtTime(peak, time);
   gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
 
   osc.connect(gain);
@@ -689,7 +728,7 @@ function playKick(time = ctx.currentTime){
   osc.stop(time + 0.3);
 }
 
-function playSnare(time = ctx.currentTime){
+function playSnare(time, vel){
   if(!noiseBuf) noiseBuf = whiteNoiseBuffer(0.25);
 
   const noise = ctx.createBufferSource();
@@ -701,19 +740,18 @@ function playSnare(time = ctx.currentTime){
   bp.Q.setValueAtTime(0.7, time);
 
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.9, time);
+  gain.gain.setValueAtTime(0.9 * vel, time);
   gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
 
   noise.connect(bp);
   bp.connect(gain);
   gain.connect(master);
 
-  // tone
   const osc = ctx.createOscillator();
   const og = ctx.createGain();
   osc.type = "triangle";
   osc.frequency.setValueAtTime(190, time);
-  og.gain.setValueAtTime(0.25, time);
+  og.gain.setValueAtTime(0.25 * vel, time);
   og.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
   osc.connect(og);
   og.connect(master);
@@ -724,7 +762,7 @@ function playSnare(time = ctx.currentTime){
   osc.stop(time + 0.2);
 }
 
-function playHat(time = ctx.currentTime){
+function playHat(time, vel){
   if(!noiseBuf) noiseBuf = whiteNoiseBuffer(0.12);
 
   const noise = ctx.createBufferSource();
@@ -735,7 +773,7 @@ function playHat(time = ctx.currentTime){
   hp.frequency.setValueAtTime(6500, time);
 
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.35, time);
+  gain.gain.setValueAtTime(0.35 * vel, time);
   gain.gain.exponentialRampToValueAtTime(0.001, time + 0.07);
 
   noise.connect(hp);
@@ -746,7 +784,7 @@ function playHat(time = ctx.currentTime){
   noise.stop(time + 0.11);
 }
 
-function playClap(time = ctx.currentTime){
+function playClap(time, vel){
   if(!noiseBuf) noiseBuf = whiteNoiseBuffer(0.25);
 
   const noise = ctx.createBufferSource();
@@ -758,15 +796,16 @@ function playClap(time = ctx.currentTime){
   bp.Q.setValueAtTime(0.8, time);
 
   const gain = ctx.createGain();
-  // enveloppe "clap" en 3 petites rafales
+  const k = vel;
+
   gain.gain.setValueAtTime(0.0001, time);
-  gain.gain.exponentialRampToValueAtTime(0.7, time + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.7*k, time + 0.005);
   gain.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
   gain.gain.setValueAtTime(0.0001, time + 0.045);
-  gain.gain.exponentialRampToValueAtTime(0.55, time + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.55*k, time + 0.05);
   gain.gain.exponentialRampToValueAtTime(0.001, time + 0.085);
   gain.gain.setValueAtTime(0.0001, time + 0.1);
-  gain.gain.exponentialRampToValueAtTime(0.45, time + 0.105);
+  gain.gain.exponentialRampToValueAtTime(0.45*k, time + 0.105);
   gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
 
   noise.connect(bp);
@@ -777,12 +816,12 @@ function playClap(time = ctx.currentTime){
   noise.stop(time + 0.2);
 }
 
-function playSound(trackId, time){
+function playSound(trackId, time, vel){
   if(!ctx) return;
-  if(trackId === "kick")  playKick(time);
-  if(trackId === "snare") playSnare(time);
-  if(trackId === "hat")   playHat(time);
-  if(trackId === "clap")  playClap(time);
+  if(trackId === "kick")  playKick(time, vel);
+  if(trackId === "snare") playSnare(time, vel);
+  if(trackId === "hat")   playHat(time, vel);
+  if(trackId === "clap")  playClap(time, vel);
 }
 
 /* Sequencer */
@@ -791,13 +830,25 @@ let stepIndex = 0;
 let timerId = null;
 
 function stepDurationSec(){
-  // 16 steps = 1 mesure en 4/4 (semiquavers)
   const bpm = Number(bpmEl.value);
-  return (60 / bpm) / 4;
+  return (60 / bpm) / 4; // 16èmes
+}
+
+/**
+ * Swing:
+ * - slider 50..75
+ * - 50 = straight
+ * - on retarde les steps impaires (1,3,5...) dans chaque paire (2*16ème)
+ */
+function swingDelaySec(){
+  const s = Number(swingEl.value);     // 50..75
+  const step = stepDurationSec();
+  const pair = step * 2;
+  const r = s / 100;                  // 0.50..0.75
+  return Math.max(0, pair * r - step); // 0..(step*0.5)
 }
 
 function updatePlayheadUI(prev, next){
-  // enlever playhead partout sur la colonne prev, ajouter sur next
   const allSteps = stepgridEl.querySelectorAll(".step");
   allSteps.forEach(btn => {
     const s = Number(btn.dataset.step);
@@ -809,18 +860,23 @@ function updatePlayheadUI(prev, next){
 async function start(){
   await ensureAudio();
   if(isPlaying) return;
+
   isPlaying = true;
   startStopEl.textContent = "STOP";
 
-  // reset playhead
   stepIndex = 0;
   updatePlayheadUI(15, 0);
 
   const tick = () => {
-    const now = ctx.currentTime;
-    tracks.forEach(t => {
-      if(pattern[t.id][stepIndex]){
-        playSound(t.id, now);
+    const baseTime = ctx.currentTime;
+    const delay = (stepIndex % 2 === 1) ? swingDelaySec() : 0;
+    const t = baseTime + delay;
+
+    tracks.forEach(tr => {
+      const v = pattern[tr.id][stepIndex]; // 0/1/2
+      if(v){
+        const vel = (v === 2) ? 1.0 : 0.72; // accent vs normal
+        playSound(tr.id, t, vel);
       }
     });
 
@@ -829,10 +885,7 @@ async function start(){
     updatePlayheadUI(prev, stepIndex);
   };
 
-  // premier tick immédiat
   tick();
-
-  // puis interval
   timerId = setInterval(tick, stepDurationSec() * 1000);
 }
 
@@ -843,7 +896,6 @@ function stop(){
   if(timerId) clearInterval(timerId);
   timerId = null;
 
-  // retirer playhead
   const allSteps = stepgridEl.querySelectorAll(".step");
   allSteps.forEach(btn => btn.classList.remove("playhead"));
 }
@@ -854,25 +906,34 @@ startStopEl.addEventListener("click", async () => {
 });
 
 clearEl.addEventListener("click", () => {
-  tracks.forEach(t => pattern[t.id].fill(false));
-  const allSteps = stepgridEl.querySelectorAll(".step");
-  allSteps.forEach(btn => btn.classList.remove("on"));
+  tracks.forEach(t => pattern[t.id].fill(0));
+  buildGrid();
 });
 
-/* si BPM change pendant playback, on recale l’interval */
-bpmEl.addEventListener("change", () => {
+function restartIntervalIfPlaying(){
   if(!isPlaying) return;
   clearInterval(timerId);
   timerId = setInterval(() => {
-    const now = ctx.currentTime;
-    tracks.forEach(t => {
-      if(pattern[t.id][stepIndex]) playSound(t.id, now);
+    const baseTime = ctx.currentTime;
+    const delay = (stepIndex % 2 === 1) ? swingDelaySec() : 0;
+    const t = baseTime + delay;
+
+    tracks.forEach(tr => {
+      const v = pattern[tr.id][stepIndex];
+      if(v){
+        const vel = (v === 2) ? 1.0 : 0.72;
+        playSound(tr.id, t, vel);
+      }
     });
+
     const prev = stepIndex;
     stepIndex = (stepIndex + 1) % stepsCount;
     updatePlayheadUI(prev, stepIndex);
   }, stepDurationSec() * 1000);
-});
+}
+
+bpmEl.addEventListener("change", restartIntervalIfPlaying);
+swingEl.addEventListener("change", () => { /* swing n'a pas besoin de reset interval */ });
 </script>
 
 </body>
