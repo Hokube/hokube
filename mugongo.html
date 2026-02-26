@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mugongo — Arc Musical du Gabon</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;1,300&display=swap');
+
+  :root {
+    --wood-dark: #2c1810;
+    --wood-mid: #6b3a2a;
+    --wood-light: #c4834a;
+    --wood-grain: #8b4e2d;
+    --string-color: #d4b896;
+    --string-glow: #ffe4b5;
+    --bg-deep: #0d0805;
+    --bg-surface: #1a0e08;
+    --text-warm: #e8c89a;
+    --text-muted: #7a5a3a;
+    --accent: #c4834a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Crimson Pro', Georgia, serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Ambient background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(107,58,42,0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 20% 80%, rgba(44,24,16,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 80% 20%, rgba(44,24,16,0.4) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Noise grain overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 600;
+    color: var(--text-warm);
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 40px rgba(196,131,74,0.4);
+  }
+
+  header p {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-top: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+
+  .stage {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: flex-end;
+    padding: 2rem;
+  }
+
+  /* ── MUGONGO SVG WRAPPER ── */
+  .mugongo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .mugongo-wrap svg {
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.8));
+    transition: filter 0.1s;
+  }
+
+  .mugongo-wrap.plucked svg {
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.8)) drop-shadow(0 0 20px rgba(196,131,74,0.7));
+  }
+
+  /* String vibration */
+  .string-line {
+    transition: d 0.05s;
+    stroke-linecap: round;
+  }
+
+  .note-label {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    color: var(--text-warm);
+    letter-spacing: 0.1em;
+    text-align: center;
+    opacity: 0.85;
+  }
+
+  .key-label {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .key-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid rgba(196,131,74,0.3);
+    border-radius: 4px;
+    background: rgba(196,131,74,0.05);
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: var(--accent);
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .mugongo-wrap.plucked .key-badge {
+    background: rgba(196,131,74,0.2);
+    border-color: rgba(196,131,74,0.7);
+  }
+
+  footer {
+    position: relative;
+    z-index: 10;
+    margin-top: 2.5rem;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+
+  /* Ripple on pluck */
+  @keyframes ripple {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  .ripple-ring {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(196,131,74,0.6);
+    animation: ripple 0.6s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @media (max-width: 600px) {
+    .stage { flex-direction: column; align-items: center; gap: 2rem; }
+    .mugongo-wrap svg { width: 100px; height: 280px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MUGONGO</h1>
+  <p>Arc musical · Gabon</p>
+</header>
+
+<div class="stage" id="stage"></div>
+
+<footer>Appuie sur <em>F · G · H</em> au clavier — ou touche les arcs</footer>
+
+<script>
+// ── Audio Engine: Karplus-Strong string synthesis ──────────────────────────
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let actx = null;
+
+function getCtx() {
+  if (!actx) actx = new AudioContext();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+
+function pluckString(freq, resonance = 0.985) {
+  const ctx = getCtx();
+  const sampleRate = ctx.sampleRate;
+  const bufLen = Math.round(sampleRate / freq);
+
+  // Fill noise buffer
+  const buf = new Float32Array(bufLen);
+  for (let i = 0; i < bufLen; i++) buf[i] = Math.random() * 2 - 1;
+
+  // Body resonance warmth — low-pass the initial noise slightly
+  for (let i = 1; i < bufLen; i++) buf[i] = (buf[i] + buf[i-1]) * 0.5;
+
+  // Create AudioBuffer
+  const audioBuf = ctx.createBuffer(1, sampleRate * 3, sampleRate);
+  const data = audioBuf.getChannelData(0);
+
+  // Karplus-Strong: delay line feedback
+  const delay = new Float32Array(bufLen);
+  for (let i = 0; i < bufLen; i++) delay[i] = buf[i];
+
+  for (let i = 0; i < data.length; i++) {
+    const idx = i % bufLen;
+    data[i] = delay[idx];
+    delay[idx] = resonance * (delay[idx] + delay[(idx + 1) % bufLen]) * 0.5;
+  }
+
+  const src = ctx.createBufferSource();
+  src.buffer = audioBuf;
+
+  // Warm the tone: gentle low-pass
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = freq * 6;
+  lp.Q.value = 0.8;
+
+  // Slight reverb via a convolver-free approach: two comb delays
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.7, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.8);
+
+  src.connect(lp);
+  lp.connect(gain);
+  gain.connect(ctx.destination);
+  src.start();
+  src.stop(ctx.currentTime + 3);
+}
+
+// ── Notes: D pentatonic — D4, F#4, A4 (3 arcs) ────────────────────────────
+const MUGONGOS = [
+  { note: 'Ré',  freq: 293.66, key: 'F', keyCode: 'KeyF', color: '#8b4e2d' },
+  { note: 'Fa#', freq: 369.99, key: 'G', keyCode: 'KeyG', color: '#7a3d20' },
+  { note: 'La',  freq: 440.00, key: 'H', keyCode: 'KeyH', color: '#6b3218' },
+];
+
+// ── SVG Arc Builder ─────────────────────────────────────────────────────────
+function buildMugungoSVG(config, idx) {
+  const w = 120, h = 320;
+  const cx = w / 2;
+
+  // Arc parameters
+  const baseY = h - 30;
+  const topY = 40;
+  const arcX1 = 20, arcX2 = w - 20;
+  const midX = cx, midY = topY + 30;
+
+  // String rest position (slight curve for realism)
+  const sx = cx;
+
+  // Wood grain paths (decorative lines on the resonance box)
+  const boxX = cx - 18, boxY = baseY - 70, boxW = 36, boxH = 65;
+
+  return `
+  <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Wood gradient for arc body -->
+      <linearGradient id="woodArc${idx}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#c4834a"/>
+        <stop offset="30%" stop-color="#8b4e2d"/>
+        <stop offset="70%" stop-color="#5c2d14"/>
+        <stop offset="100%" stop-color="#3d1e0a"/>
+      </linearGradient>
+      <!-- Wood gradient for resonance box -->
+      <linearGradient id="woodBox${idx}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#9c5a30"/>
+        <stop offset="50%" stop-color="#6b3a1f"/>
+        <stop offset="100%" stop-color="#3d1e0a"/>
+      </linearGradient>
+      <!-- String glow filter -->
+      <filter id="strGlow${idx}" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2.5" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <!-- Arc shadow -->
+      <filter id="shadow${idx}">
+        <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#0d0805" flood-opacity="0.7"/>
+      </filter>
+      <!-- Noise texture for wood -->
+      <filter id="woodTex${idx}">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" seed="${idx * 7}" result="noise"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 0.2
+                                              0 0 0 0 0.1
+                                              0 0 0 0 0.05
+                                              0 0 0 0.12 0" result="coloredNoise"/>
+        <feComposite in="coloredNoise" in2="SourceGraphic" operator="over"/>
+      </filter>
+    </defs>
+
+    <!-- ── RESONANCE BOX ── -->
+    <g filter="url(#shadow${idx})">
+      <!-- Box body -->
+      <rect x="${boxX}" y="${boxY}" width="${boxW}" height="${boxH}" rx="4"
+        fill="url(#woodBox${idx})"/>
+      <!-- Wood grain lines -->
+      <line x1="${boxX+4}" y1="${boxY+5}" x2="${boxX+4}" y2="${boxY+boxH-5}" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+      <line x1="${boxX+10}" y1="${boxY+5}" x2="${boxX+10}" y2="${boxY+boxH-5}" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
+      <line x1="${boxX+18}" y1="${boxY+5}" x2="${boxX+18}" y2="${boxY+boxH-5}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+      <line x1="${boxX+26}" y1="${boxY+5}" x2="${boxX+26}" y2="${boxY+boxH-5}" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
+      <line x1="${boxX+32}" y1="${boxY+5}" x2="${boxX+32}" y2="${boxY+boxH-5}" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+      <!-- Sound hole -->
+      <ellipse cx="${cx}" cy="${boxY + boxH*0.45}" rx="7" ry="9"
+        fill="#0d0805" stroke="rgba(255,200,100,0.15)" stroke-width="0.5"/>
+      <!-- Box highlight -->
+      <rect x="${boxX}" y="${boxY}" width="${boxW}" height="3" rx="4"
+        fill="rgba(196,131,74,0.3)"/>
+      <!-- Box base -->
+      <rect x="${boxX - 4}" y="${boxY + boxH - 4}" width="${boxW + 8}" height="8" rx="3"
+        fill="#2c1810"/>
+    </g>
+
+    <!-- ── ARC BODY (the bent wood stave) ── -->
+    <g filter="url(#shadow${idx})">
+      <!-- Main arc - thick wood stave -->
+      <path d="M ${cx} ${baseY - 5}
+               C ${cx - 5} ${baseY - 40}, ${arcX1 - 5} ${midY + 80}, ${arcX1} ${midY}
+               C ${arcX1 + 5} ${midY - 30}, ${cx - 25} ${topY - 10}, ${cx} ${topY}"
+        fill="none"
+        stroke="url(#woodArc${idx})"
+        stroke-width="9"
+        stroke-linecap="round"/>
+      <!-- Arc highlight -->
+      <path d="M ${cx} ${baseY - 5}
+               C ${cx - 5} ${baseY - 40}, ${arcX1 - 5} ${midY + 80}, ${arcX1} ${midY}
+               C ${arcX1 + 5} ${midY - 30}, ${cx - 25} ${topY - 10}, ${cx} ${topY}"
+        fill="none"
+        stroke="rgba(196,131,74,0.3)"
+        stroke-width="3"
+        stroke-linecap="round"/>
+    </g>
+
+    <!-- ── BINDING CORD (where string meets arc top) ── -->
+    <circle cx="${cx}" cy="${topY}" r="5" fill="#4a2010" stroke="#c4834a" stroke-width="1.5"/>
+    <circle cx="${cx}" cy="${topY}" r="2" fill="#d4b896"/>
+
+    <!-- ── BINDING at base ── -->
+    <rect x="${cx - 8}" y="${baseY - 8}" width="16" height="10" rx="2"
+      fill="#3d1e0a" stroke="rgba(196,131,74,0.4)" stroke-width="1"/>
+
+    <!-- ── THE STRING ── -->
+    <path class="string-line" id="str${idx}"
+      d="M ${cx} ${topY + 5} Q ${cx} ${(topY + baseY - 8)/2} ${cx} ${baseY - 8}"
+      fill="none"
+      stroke="#d4c5a0"
+      stroke-width="1.5"
+      filter="url(#strGlow${idx})"
+      opacity="0.9"/>
+  </svg>`;
+}
+
+// ── DOM Construction ──────────────────────────────────────────────────────
+const stage = document.getElementById('stage');
+
+MUGONGOS.forEach((cfg, idx) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'mugongo-wrap';
+  wrap.id = `mug-${idx}`;
+
+  wrap.innerHTML = `
+    ${buildMugungoSVG(cfg, idx)}
+    <div class="note-label">${cfg.note}</div>
+    <div class="key-badge">${cfg.key}</div>
+  `;
+
+  // Touch / click
+  wrap.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    triggerPluck(idx, e.clientX, e.clientY);
+  });
+
+  stage.appendChild(wrap);
+});
+
+// ── Pluck Logic ───────────────────────────────────────────────────────────
+let pluckTimeouts = {};
+
+function triggerPluck(idx, clientX, clientY) {
+  const cfg = MUGONGOS[idx];
+  pluckString(cfg.freq);
+  animatePluck(idx);
+  spawnRipple(clientX, clientY);
+}
+
+function animatePluck(idx) {
+  const wrap = document.getElementById(`mug-${idx}`);
+  const strEl = document.getElementById(`str${idx}`);
+
+  // Clear any pending reset
+  if (pluckTimeouts[idx]) clearTimeout(pluckTimeouts[idx]);
+
+  // Add plucked class
+  wrap.classList.add('plucked');
+
+  // Vibrate the string visually
+  const cx = 60;
+  const topY = 40 + 5;
+  const baseY = 320 - 30 - 8;
+  const midY = (topY + baseY) / 2;
+
+  let frame = 0;
+  const totalFrames = 14;
+  const maxDev = 16;
+
+  function step() {
+    const decay = 1 - frame / totalFrames;
+    const dev = Math.sin(frame * 1.8) * maxDev * decay;
+    const qx = cx + dev;
+    strEl.setAttribute('d', `M ${cx} ${topY} Q ${qx} ${midY} ${cx} ${baseY}`);
+    frame++;
+    if (frame < totalFrames) requestAnimationFrame(step);
+    else strEl.setAttribute('d', `M ${cx} ${topY} Q ${cx} ${midY} ${cx} ${baseY}`);
+  }
+  requestAnimationFrame(step);
+
+  pluckTimeouts[idx] = setTimeout(() => {
+    wrap.classList.remove('plucked');
+  }, 300);
+}
+
+function spawnRipple(x, y) {
+  const el = document.createElement('div');
+  el.className = 'ripple-ring';
+  el.style.left = (x - 20) + 'px';
+  el.style.top = (y - 20) + 'px';
+  el.style.position = 'fixed';
+  el.style.zIndex = 100;
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.repeat) return;
+  const idx = MUGONGOS.findIndex(m => m.keyCode === e.code);
+  if (idx !== -1) {
+    const wrap = document.getElementById(`mug-${idx}`);
+    const rect = wrap.getBoundingClientRect();
+    triggerPluck(idx, rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
+});
+</script>
+</body>
+</html>
