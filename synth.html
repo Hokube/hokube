@@ -536,6 +536,175 @@ body::after {
   box-shadow:0 0 8px var(--cyan-dim);
 }
 
+/* ════════════════════════════════════════════════════════
+   DRUM MACHINE
+════════════════════════════════════════════════════════ */
+.drum-machine {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.1rem;
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-deep), inset 0 1px 0 var(--glass-hi);
+  position: relative;
+  overflow: hidden;
+}
+
+.drum-machine::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(255,80,80,0.4), var(--cyan-dim), transparent);
+}
+
+.drum-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom: 0.9rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.drum-title-block { display:flex; align-items:center; gap:0.8rem; }
+
+.drum-title {
+  font-family: var(--font-main);
+  font-size: 0.5rem;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.drum-controls { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+
+/* TRAP button — special red/orange glow */
+.trap-btn {
+  background: rgba(255,60,30,0.1);
+  border: 1px solid rgba(255,80,30,0.3);
+  border-radius: 5px;
+  color: rgba(255,120,80,0.7);
+  font-family: var(--font-main);
+  font-size: 0.45rem;
+  letter-spacing: 0.25em;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.trap-btn::before {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 120%, rgba(255,80,20,0.3), transparent 70%);
+  opacity:0; transition: opacity 0.2s;
+}
+
+.trap-btn.on {
+  background: rgba(255,60,20,0.25);
+  border-color: rgba(255,100,40,0.8);
+  color: #ff7040;
+  box-shadow: 0 0 16px rgba(255,80,20,0.5), inset 0 0 10px rgba(255,60,20,0.15);
+  text-shadow: 0 0 10px rgba(255,100,40,0.8);
+}
+.trap-btn.on::before { opacity:1; }
+
+/* Play / Stop */
+.drum-play-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--knob-base);
+  border: 1px solid var(--border-hi);
+  color: var(--cyan);
+  font-size: 0.6rem;
+  cursor: pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition: all 0.15s;
+  box-shadow: 0 0 8px var(--cyan-dim);
+}
+.drum-play-btn:hover { background: var(--cyan-dim); box-shadow: 0 0 16px var(--cyan-glow); }
+.drum-play-btn.playing { background: var(--cyan-dim); border-color: var(--cyan); }
+
+/* BPM display */
+.drum-bpm-wrap {
+  display:flex; align-items:center; gap:0.4rem;
+}
+.drum-bpm-label {
+  font-family:var(--font-main); font-size:0.4rem; color:var(--muted); letter-spacing:0.15em;
+}
+.drum-bpm-val {
+  font-family:var(--font-main); font-size:0.65rem; color:var(--cyan);
+  letter-spacing:0.1em; min-width:2.2rem; text-align:center;
+}
+.bpm-arrow {
+  background:none; border:none; color:var(--muted); cursor:pointer;
+  font-size:0.7rem; padding:0 0.1rem; line-height:1;
+  transition:color 0.1s;
+}
+.bpm-arrow:hover { color:var(--cyan); }
+
+/* ── GRID ── */
+.drum-grid { display:flex; flex-direction:column; gap:0.35rem; }
+
+.drum-row { display:flex; align-items:center; gap:0.4rem; }
+
+.drum-row-label {
+  font-family: var(--font-main);
+  font-size: 0.38rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  width: 42px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.drum-row-label.kick-label { color: #ff6040; }
+.drum-row-label.snare-label { color: #ffcc40; }
+.drum-row-label.clap-label  { color: #cc88ff; }
+.drum-row-label.chh-label   { color: #40ffaa; }
+.drum-row-label.ohh-label   { color: #40ddff; }
+
+.drum-steps { display:flex; gap:3px; flex:1; }
+
+.drum-step {
+  flex:1;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--knob-base);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, box-shadow 0.1s;
+  position: relative;
+  min-width: 0;
+}
+
+/* Bar grouping: every 4 steps slightly lighter */
+.drum-step:nth-child(4n+1) { border-color: rgba(100,200,255,0.2); }
+
+.drum-step.on.kick  { background:#ff4020; border-color:#ff6040; box-shadow:0 0 8px rgba(255,64,32,0.6); }
+.drum-step.on.snare { background:#ccaa00; border-color:#ffcc40; box-shadow:0 0 8px rgba(255,200,40,0.5); }
+.drum-step.on.clap  { background:#7733cc; border-color:#cc88ff; box-shadow:0 0 8px rgba(200,100,255,0.5); }
+.drum-step.on.chh   { background:#008844; border-color:#40ffaa; box-shadow:0 0 8px rgba(64,255,160,0.4); }
+.drum-step.on.ohh   { background:#006688; border-color:#40ddff; box-shadow:0 0 8px rgba(64,220,255,0.4); }
+
+/* Playhead highlight */
+.drum-step.playing-head {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), 0 0 10px rgba(255,255,255,0.15) !important;
+  filter: brightness(1.5);
+}
+
+/* Volume knobs per track */
+.drum-row-vol {
+  width: 28px; height: 28px;
+  flex-shrink:0;
+}
+
+@media (max-width:600px) {
+  .drum-step { height:18px; }
+  .drum-row-label { width:32px; font-size:0.32rem; }
+  .drum-steps { gap:2px; }
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width:800px) {
   .synth-panel { grid-template-columns:1fr 1fr; }
@@ -563,6 +732,33 @@ body::after {
       <div class="led green"></div>
       <div class="led"></div>
       <div class="led red"></div>
+    </div>
+  </div>
+
+  <!-- ── DRUM MACHINE ── -->
+  <div class="drum-machine">
+    <div class="drum-header">
+      <div class="drum-title-block">
+        <span class="drum-title">TR-808 · Step Sequencer</span>
+        <div class="led" style="animation-delay:0.4s"></div>
+      </div>
+      <div class="drum-controls">
+        <!-- BPM -->
+        <div class="drum-bpm-wrap">
+          <span class="drum-bpm-label">BPM</span>
+          <button class="bpm-arrow" onclick="changeBPM(-1)">◀</button>
+          <span class="drum-bpm-val" id="drumBPMval">120</span>
+          <button class="bpm-arrow" onclick="changeBPM(1)">▶</button>
+        </div>
+        <!-- TRAP button -->
+        <button class="trap-btn" id="trapBtn" onclick="toggleTrap(this)">⚡ TRAP</button>
+        <!-- Play/Stop -->
+        <button class="drum-play-btn" id="drumPlayBtn" onclick="toggleDrumPlay(this)">▶</button>
+      </div>
+    </div>
+
+    <div class="drum-grid" id="drumGrid">
+      <!-- Rows injected by JS -->
     </div>
   </div>
 
@@ -1297,7 +1493,370 @@ function stopArp() {
   arpStepEls.forEach(s => s.classList.remove('active'));
 }
 
-// Init oscilloscope idle
+
+// ════════════════════════════════════════════════════════════════════════════
+// TR-808 DRUM MACHINE
+// ════════════════════════════════════════════════════════════════════════════
+
+const DRUM_TRACKS = [
+  { id:'kick',  label:'KICK',  cls:'kick-label'  },
+  { id:'snare', label:'SNARE', cls:'snare-label'  },
+  { id:'clap',  label:'CLAP',  cls:'clap-label'   },
+  { id:'chh',   label:'C.HAT', cls:'chh-label'    },
+  { id:'ohh',   label:'O.HAT', cls:'ohh-label'    },
+];
+
+// Default patterns (16 steps each)
+const drumPatterns = {
+  kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+  snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+  clap:  [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,1,0],
+  chh:   [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+  ohh:   [0,0,0,1, 0,0,0,0, 0,0,0,1, 0,0,0,0],
+};
+
+const drumVols = { kick:0.9, snare:0.7, clap:0.65, chh:0.5, ohh:0.55 };
+
+let drumBPM = 120;
+let drumPlaying = false;
+let drumStep = 0;
+let drumScheduler = null;
+let drumNextTime = 0;
+let trapOn = false;
+
+// ── Build Grid UI ────────────────────────────────────────────────────────
+const drumGrid = document.getElementById('drumGrid');
+
+DRUM_TRACKS.forEach(track => {
+  const row = document.createElement('div');
+  row.className = 'drum-row';
+  row.innerHTML = `<div class="drum-row-label ${track.cls}">${track.label}</div>
+    <div class="drum-steps" id="steps-${track.id}"></div>`;
+
+  const stepsEl = row.querySelector(`#steps-${track.id}`);
+  for (let i = 0; i < 16; i++) {
+    const btn = document.createElement('div');
+    btn.className = `drum-step ${track.id}`;
+    btn.dataset.step = i;
+    btn.dataset.track = track.id;
+    if (drumPatterns[track.id][i]) btn.classList.add('on');
+    btn.addEventListener('click', () => {
+      drumPatterns[track.id][i] ^= 1;
+      btn.classList.toggle('on', !!drumPatterns[track.id][i]);
+    });
+    stepsEl.appendChild(btn);
+  }
+  drumGrid.appendChild(row);
+});
+
+// ── TR-808 Sound Synthesis ────────────────────────────────────────────────
+
+function triggerDrum(type, time) {
+  initAudio();
+  const ctx = actx;
+  const vol = drumVols[type] || 0.7;
+
+  switch(type) {
+    case 'kick':  synth808Kick(ctx, time, vol); break;
+    case 'snare': synth808Snare(ctx, time, vol); break;
+    case 'clap':  synth808Clap(ctx, time, vol); break;
+    case 'chh':   synth808CHH(ctx, time, vol); break;
+    case 'ohh':   synth808OHH(ctx, time, vol); break;
+  }
+}
+
+// ── KICK 808 ─────────────────────────────────────────────────────────────
+// Classic pitch-dropping sine + sub thump. TRAP mode adds heavy distortion.
+function synth808Kick(ctx, time, vol) {
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(160, time);
+  osc.frequency.exponentialRampToValueAtTime(trapOn ? 28 : 42, time + (trapOn ? 0.9 : 0.55));
+
+  // Sub oscillator for extra weight
+  const sub = ctx.createOscillator();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(80, time);
+  sub.frequency.exponentialRampToValueAtTime(trapOn ? 22 : 35, time + (trapOn ? 1.0 : 0.55));
+
+  // Click transient
+  const clickOsc = ctx.createOscillator();
+  clickOsc.type = 'triangle';
+  clickOsc.frequency.setValueAtTime(900, time);
+  clickOsc.frequency.exponentialRampToValueAtTime(60, time + 0.025);
+  const clickGain = ctx.createGain();
+  clickGain.gain.setValueAtTime(0.6, time);
+  clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(vol * (trapOn ? 1.4 : 1.0), time);
+  env.gain.exponentialRampToValueAtTime(0.001, time + (trapOn ? 1.1 : 0.65));
+
+  const subGain = ctx.createGain();
+  subGain.gain.value = 0.55;
+
+  if (trapOn) {
+    // Heavy waveshaper distortion — 808 trap saturation
+    const ws = ctx.createWaveShaper();
+    ws.curve = makeTrapDistCurve(380);
+    ws.oversample = '4x';
+
+    // Low-pass to keep it bassy after distortion
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 180;
+    lp.Q.value = 2.5;
+
+    // Extra gain stage before distortion (like running into a saturated channel)
+    const preGain = ctx.createGain();
+    preGain.gain.value = 3.5;
+
+    osc.connect(preGain); sub.connect(subGain); subGain.connect(preGain);
+    preGain.connect(ws);
+    ws.connect(lp);
+    clickOsc.connect(clickGain);
+    clickGain.connect(env);
+    lp.connect(env);
+    env.connect(masterGain);
+
+    // Second layer: raw sub bypass (keeps the low-end tight)
+    const bypass = ctx.createGain();
+    bypass.gain.value = 0.4;
+    sub.connect(bypass);
+    bypass.connect(masterGain);
+  } else {
+    osc.connect(env);
+    sub.connect(subGain); subGain.connect(env);
+    clickOsc.connect(clickGain); clickGain.connect(env);
+    env.connect(masterGain);
+  }
+
+  osc.start(time); osc.stop(time + 1.2);
+  sub.start(time); sub.stop(time + 1.2);
+  clickOsc.start(time); clickOsc.stop(time + 0.05);
+}
+
+// TRAP distortion curve — asymmetric hard clip with warmth
+function makeTrapDistCurve(amount) {
+  const n = 512;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    // Asymmetric: harder on positive (punch), softer on negative (warmth)
+    if (x >= 0) curve[i] = 1 - Math.exp(-amount * x);
+    else curve[i] = -1 + Math.exp(amount * 0.6 * x);
+  }
+  return curve;
+}
+
+// ── SNARE 808 ─────────────────────────────────────────────────────────────
+function synth808Snare(ctx, time, vol) {
+  // Tone component
+  const osc = ctx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(200, time);
+  osc.frequency.exponentialRampToValueAtTime(80, time + 0.15);
+
+  const toneEnv = ctx.createGain();
+  toneEnv.gain.setValueAtTime(vol * 0.7, time);
+  toneEnv.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+  // Noise component (the snappy body)
+  const bufLen = ctx.sampleRate * 0.22;
+  const noiseBuf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) nd[i] = Math.random() * 2 - 1;
+
+  const noiseSrc = ctx.createBufferSource();
+  noiseSrc.buffer = noiseBuf;
+
+  const noiseHP = ctx.createBiquadFilter();
+  noiseHP.type = 'highpass';
+  noiseHP.frequency.value = 1200;
+
+  const noiseEnv = ctx.createGain();
+  noiseEnv.gain.setValueAtTime(vol * 0.9, time);
+  noiseEnv.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+
+  osc.connect(toneEnv); toneEnv.connect(masterGain);
+  noiseSrc.connect(noiseHP); noiseHP.connect(noiseEnv); noiseEnv.connect(masterGain);
+
+  osc.start(time); osc.stop(time + 0.2);
+  noiseSrc.start(time); noiseSrc.stop(time + 0.25);
+}
+
+// ── CLAP 808 ──────────────────────────────────────────────────────────────
+function synth808Clap(ctx, time, vol) {
+  // 3 layered noise bursts slightly offset (the clap transient smear)
+  const delays = [0, 0.01, 0.022, 0.035];
+  delays.forEach((d, i) => {
+    const len = ctx.sampleRate * (i === delays.length-1 ? 0.15 : 0.025);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < len; j++) data[j] = Math.random() * 2 - 1;
+
+    const src = ctx.createBufferSource(); src.buffer = buf;
+
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1800 + i * 200;
+    bp.Q.value = 0.8;
+
+    const g = ctx.createGain();
+    const isLast = i === delays.length - 1;
+    g.gain.setValueAtTime(vol * (isLast ? 0.7 : 1.0), time + d);
+    g.gain.exponentialRampToValueAtTime(0.001, time + d + (isLast ? 0.14 : 0.03));
+
+    src.connect(bp); bp.connect(g); g.connect(masterGain);
+    src.start(time + d); src.stop(time + d + 0.2);
+  });
+}
+
+// ── CLOSED HI-HAT 808 ─────────────────────────────────────────────────────
+function synth808CHH(ctx, time, vol) {
+  // 6 detuned square oscillators (metallic character of a real hi-hat)
+  const freqs = [205.3, 310.7, 418.2, 513.9, 627.4, 834.6];
+  const merger = ctx.createGain(); merger.gain.value = vol * 0.25;
+
+  freqs.forEach(f => {
+    const o = ctx.createOscillator();
+    o.type = 'square';
+    o.frequency.value = f;
+    o.connect(merger);
+    o.start(time); o.stop(time + 0.07);
+  });
+
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 7000;
+
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(1, time);
+  env.gain.exponentialRampToValueAtTime(0.001, time + 0.065);
+
+  merger.connect(hp); hp.connect(env); env.connect(masterGain);
+}
+
+// ── OPEN HI-HAT 808 ───────────────────────────────────────────────────────
+function synth808OHH(ctx, time, vol) {
+  const freqs = [205.3, 310.7, 418.2, 513.9, 627.4, 834.6];
+  const merger = ctx.createGain(); merger.gain.value = vol * 0.22;
+
+  freqs.forEach(f => {
+    const o = ctx.createOscillator();
+    o.type = 'square';
+    o.frequency.value = f;
+    o.connect(merger);
+    o.start(time); o.stop(time + 0.5);
+  });
+
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 6000;
+
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(1, time);
+  env.gain.exponentialRampToValueAtTime(0.001, time + 0.45);
+
+  merger.connect(hp); hp.connect(env); env.connect(masterGain);
+}
+
+// ── Step Sequencer Scheduler ──────────────────────────────────────────────
+const SCHEDULE_AHEAD = 0.1; // seconds
+const SCHEDULER_INTERVAL = 25; // ms
+
+function drumSchedulerLoop() {
+  initAudio();
+  while (drumNextTime < actx.currentTime + SCHEDULE_AHEAD) {
+    scheduleDrumStep(drumStep, drumNextTime);
+    advanceDrumStep();
+  }
+}
+
+function scheduleDrumStep(step, time) {
+  DRUM_TRACKS.forEach(track => {
+    if (drumPatterns[track.id][step]) {
+      triggerDrum(track.id, time);
+    }
+  });
+  // Visual playhead — deferred to requestAnimationFrame
+  scheduleVisualStep(step, time);
+}
+
+// Visual queue for playhead highlighting
+const visualQueue = [];
+function scheduleVisualStep(step, time) {
+  visualQueue.push({ step, time });
+}
+
+let lastVisualStep = -1;
+function updatePlayhead() {
+  if (drumPlaying) requestAnimationFrame(updatePlayhead);
+  if (!actx) return;
+  const now = actx.currentTime;
+  while (visualQueue.length && visualQueue[0].time <= now) {
+    const { step } = visualQueue.shift();
+    if (step !== lastVisualStep) {
+      // Clear previous
+      document.querySelectorAll('.drum-step.playing-head').forEach(el => el.classList.remove('playing-head'));
+      // Highlight current column
+      DRUM_TRACKS.forEach(track => {
+        const el = document.querySelector(`#steps-${track.id} [data-step="${step}"]`);
+        if (el) el.classList.add('playing-head');
+      });
+      lastVisualStep = step;
+    }
+  }
+}
+
+function advanceDrumStep() {
+  const secPerBeat = 60.0 / drumBPM;
+  const secPerStep = secPerBeat / 4; // 16th note
+  drumNextTime += secPerStep;
+  drumStep = (drumStep + 1) % 16;
+}
+
+function toggleDrumPlay(btn) {
+  initAudio();
+  drumPlaying = !drumPlaying;
+  btn.textContent = drumPlaying ? '■' : '▶';
+  btn.classList.toggle('playing', drumPlaying);
+
+  if (drumPlaying) {
+    drumStep = 0;
+    drumNextTime = actx.currentTime + 0.05;
+    drumScheduler = setInterval(drumSchedulerLoop, SCHEDULER_INTERVAL);
+    requestAnimationFrame(updatePlayhead);
+  } else {
+    clearInterval(drumScheduler);
+    drumScheduler = null;
+    document.querySelectorAll('.drum-step.playing-head').forEach(el => el.classList.remove('playing-head'));
+    visualQueue.length = 0;
+  }
+}
+
+function changeBPM(delta) {
+  drumBPM = Math.max(60, Math.min(200, drumBPM + delta));
+  document.getElementById('drumBPMval').textContent = drumBPM;
+}
+
+// Mouse wheel on BPM val
+document.getElementById('drumBPMval').addEventListener('wheel', e => {
+  changeBPM(e.deltaY < 0 ? 1 : -1);
+  e.preventDefault();
+}, {passive:false});
+
+function toggleTrap(btn) {
+  trapOn = !trapOn;
+  btn.classList.toggle('on', trapOn);
+  // Visual: pulsing red glow on kick row when trap active
+  document.querySelector('.kick-label').style.textShadow = trapOn
+    ? '0 0 12px rgba(255,80,20,0.9)' : '';
+  document.querySelectorAll('.drum-step.kick.on').forEach(el => {
+    el.style.boxShadow = trapOn ? '0 0 16px rgba(255,60,10,0.9)' : '';
+  });
+}
+
 window.addEventListener('load', () => {
   // Lazy init: start oscilloscope draw loop without audio
   const canvas = document.getElementById('oscilloscope');
