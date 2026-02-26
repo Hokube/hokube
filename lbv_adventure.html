@@ -174,6 +174,95 @@ const ctx = canvas.getContext('2d');
 const W = canvas.width;
 const H = canvas.height;
 
+// ---- AUDIO ENGINE (8-bit Web Audio API) ----
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playTone(frequency, type, duration, volume=0.3, startFreq=null, endFreq=null) {
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = type;
+    const now = audioCtx.currentTime;
+    if (startFreq && endFreq) {
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+    } else {
+      osc.frequency.setValueAtTime(frequency, now);
+    }
+    gain.gain.setValueAtTime(volume, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    osc.start(now);
+    osc.stop(now + duration);
+  } catch(e) {}
+}
+
+function sfxJump() {
+  initAudio();
+  // Son saut : montée rapide de fréquence (style Mario)
+  playTone(0, 'square', 0.12, 0.25, 300, 700);
+}
+
+function sfxCollect(type) {
+  initAudio();
+  // CD : arpège joyeux
+  if (type === 0) {
+    playTone(880, 'square', 0.08, 0.2);
+    setTimeout(() => playTone(1100, 'square', 0.08, 0.2), 60);
+    setTimeout(() => playTone(1320, 'square', 0.1, 0.2), 120);
+  }
+  // K7 : son plus "rétro"
+  else if (type === 1) {
+    playTone(0, 'square', 0.15, 0.2, 600, 900);
+    setTimeout(() => playTone(1200, 'triangle', 0.1, 0.15), 100);
+  }
+  // Vinyl : son grave et chaud
+  else {
+    playTone(440, 'triangle', 0.1, 0.2);
+    setTimeout(() => playTone(554, 'triangle', 0.1, 0.2), 80);
+    setTimeout(() => playTone(659, 'triangle', 0.12, 0.2), 160);
+  }
+}
+
+function sfxStompEnemy() {
+  initAudio();
+  // Écrasement ennemi : son descendant brusque
+  playTone(0, 'square', 0.18, 0.3, 400, 80);
+  setTimeout(() => playTone(200, 'sawtooth', 0.08, 0.1), 100);
+}
+
+function sfxHurt() {
+  initAudio();
+  // Dégât : bruit discordant
+  playTone(220, 'sawtooth', 0.1, 0.3);
+  setTimeout(() => playTone(180, 'sawtooth', 0.1, 0.25), 80);
+  setTimeout(() => playTone(150, 'sawtooth', 0.12, 0.2), 160);
+}
+
+function sfxDie() {
+  initAudio();
+  // Mort : descente dramatique 8-bit
+  const notes = [440, 392, 349, 311, 277, 247, 220, 196, 165];
+  notes.forEach((f, i) => {
+    setTimeout(() => playTone(f, 'square', 0.12, 0.25), i * 80);
+  });
+}
+
+function sfxLevelComplete() {
+  initAudio();
+  // Victoire : jingle joyeux
+  const melody = [523, 659, 784, 1047, 784, 1047];
+  melody.forEach((f, i) => {
+    setTimeout(() => playTone(f, 'square', 0.18, 0.3), i * 120);
+  });
+}
+
 // ---- GAME STATE ----
 let gameRunning = false;
 let score = 0;
@@ -289,6 +378,7 @@ document.addEventListener('keyup', e => { keys[e.code] = false; });
 function jump() {
   player.vy = -14;
   player.onGround = false;
+  sfxJump();
 }
 
 // Mobile buttons
@@ -779,8 +869,9 @@ function updateEnemies() {
         if(player.vy > 0 && player.y+player.h < e.y+e.h/2+5) {
           // Kill enemy
           e.dead = true; e.deathTimer = 30;
-          player.vy = -10; // bounce
+          player.vy = -10;
           score += 50;
+          sfxStompEnemy();
           spawnParticles(e.x+e.w/2, e.y, '#ff4444');
           updateHUD();
         } else {
@@ -800,6 +891,7 @@ function updateCollectibles() {
       const colors = ['#00e5ff','#ffab00','#76ff03'];
       const pts = [10, 20, 30];
       spawnParticles(c.x, c.y, colors[c.type], 10);
+      sfxCollect(c.type);
       score += pts[c.type];
       updateHUD();
     }
@@ -813,8 +905,10 @@ function playerDie() {
   spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ff4444', 12);
   document.getElementById('livesDisplay').textContent = lives;
   if(lives<=0) {
+    sfxDie();
     setTimeout(()=>gameOver(), 500);
   } else {
+    sfxHurt();
     // Reset position
     player.x = 80; player.y = 300;
     player.vx = 0; player.vy = 0;
@@ -846,13 +940,13 @@ function checkLevelComplete() {
   const reachedEnd = player.x > 2700;
   if(reachedEnd) {
     gameRunning = false;
+    sfxLevelComplete();
     const overlay = document.getElementById('overlay');
     overlay.innerHTML = `
       <h1>🎉 VICTOIRE ! 🎉</h1>
       <p>Bravo Hokube ! Tu as terminé l'aventure à Libreville !</p>
       <p>Score: ${score} pts</p>
       <p>💿 Collectibles: ${collectibles.filter(c=>c.collected).length}/${collectibles.length}</p>
-      <p>🇬🇦 Gabon Pride ! 🎵</p>
       <button id="startBtn" onclick="startGame()" style="margin-top:20px;padding:12px 30px;background:#00ff88;color:#000;border:none;font-size:18px;font-weight:bold;cursor:pointer;border-radius:4px;">REJOUER</button>
     `;
     overlay.style.display = 'flex';
@@ -890,6 +984,7 @@ function gameLoop() {
 }
 
 function startGame() {
+  initAudio();
   score = 0; lives = 3; frameCount = 0; level = 1;
   player = { x:80, y:300, w:28, h:44, vx:0, vy:0, onGround:false, facing:1, invincible:0, animFrame:0, animTimer:0 };
   camera = { x: 0 };
