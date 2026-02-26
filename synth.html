@@ -3,30 +3,35 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>HOKUBE GEMINI LAB (WebAudio)</title>
+<title>HOKUBE GEMINI SOUND LAB</title>
 <style>
   :root{
     --bg:#070A12;
     --panel:#0B1020;
+    --panel2:#070B16;
     --stroke:#23346f;
+    --stroke2:#2b3f86;
     --text:#EAF0FF;
     --muted:#9AA6D6;
     --accent:#7AA2FF;
     --shadow: 0 10px 30px rgba(0,0,0,.35);
     --glow: 0 0 0 1px rgba(122,162,255,.22), 0 0 22px rgba(122,162,255,.14);
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing:border-box; }
   body{
     margin:0;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-    color:var(--text);
     background:
       radial-gradient(900px 500px at 20% 0%, rgba(122,162,255,.12), transparent 60%),
       radial-gradient(900px 500px at 80% 10%, rgba(122,162,255,.10), transparent 55%),
       var(--bg);
+    color:var(--text);
   }
-
-  .wrap{ max-width: 760px; margin: 0 auto; padding: 10px 10px calc(12px + env(safe-area-inset-bottom)); }
+  .wrap{
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 10px 10px calc(12px + env(safe-area-inset-bottom));
+  }
   .top{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding: 8px 10px; margin-bottom: 8px;
@@ -38,7 +43,7 @@
   .status{ font-size:11px; color:var(--muted); margin-top:4px; }
   .btns{ display:flex; gap:8px; align-items:center; flex:0 0 auto; }
   button{
-    border:1px solid var(--stroke);
+    border:1px solid var(--stroke2);
     background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
     color:var(--text);
     padding:9px 10px;
@@ -48,10 +53,12 @@
     cursor:pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  button.on{ border-color: var(--accent); box-shadow: 0 0 0 1px rgba(122,162,255,.35), 0 0 28px rgba(122,162,255,.18); }
+  button.on{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(122,162,255,.35), 0 0 28px rgba(122,162,255,.18);
+  }
   button:active{ transform: translateY(1px); }
 
-  /* Compact grid */
   .panel{
     border:1px solid var(--stroke);
     border-radius:18px;
@@ -59,12 +66,13 @@
     background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
     box-shadow: var(--shadow);
   }
+
   .row{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
     gap:10px;
   }
-  @media (max-width: 700px){
+  @media (max-width: 780px){
     .row{ grid-template-columns: 1fr; }
   }
 
@@ -75,91 +83,22 @@
     background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
   }
   .block h3{
-    margin:0 0 8px;
+    margin:0 0 10px;
     font-size:12px;
-    color:var(--text);
-    opacity:.92;
     letter-spacing:.6px;
     text-transform:uppercase;
+    opacity:.92;
   }
 
-  /* JUNO-style slider strip */
-  .strip{
-    display:flex;
-    gap:10px;
-    align-items:flex-end;
-    justify-content:space-between;
-    flex-wrap:wrap;
+  .switchRow{
+    display:flex; gap:8px; flex-wrap:wrap;
+    margin-bottom:10px;
   }
-  .sliderCol{
-    width: 60px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:6px;
-    padding:6px 4px;
-    border:1px solid rgba(255,255,255,.05);
-    border-radius:12px;
-    background: rgba(0,0,0,.14);
-  }
-  .lab{
-    font-size:10px;
-    color:var(--muted);
-    text-align:center;
-    line-height:1.1;
-    min-height: 24px;
-  }
-  .val{
-    font-size:10px;
-    color:var(--text);
-    opacity:.9;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Vertical range */
-  input[type="range"].v{
-    -webkit-appearance: none;
-    appearance:none;
-    width: 120px;
-    height: 28px;
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
-    touch-action: none;
-    background: transparent;
-  }
-  input[type="range"].v::-webkit-slider-runnable-track{
-    height: 6px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.10);
-    border:1px solid rgba(122,162,255,.18);
-  }
-  input[type="range"].v::-webkit-slider-thumb{
-    -webkit-appearance:none;
-    width: 18px; height: 18px;
-    border-radius: 6px;
-    background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
-    border:1px solid rgba(122,162,255,.45);
-    box-shadow: 0 6px 14px rgba(0,0,0,.35), 0 0 18px rgba(122,162,255,.16);
-    margin-top: -7px;
-  }
-  input[type="range"].v::-moz-range-track{
-    height:6px; border-radius:999px; background: rgba(255,255,255,.10);
-    border:1px solid rgba(122,162,255,.18);
-  }
-  input[type="range"].v::-moz-range-thumb{
-    width:18px; height:18px; border-radius:6px;
-    background: rgba(255,255,255,.14);
-    border:1px solid rgba(122,162,255,.45);
-  }
-
-  /* Switch rows */
-  .switchRow{ display:flex; gap:8px; flex-wrap:wrap; }
   .pill{
     padding:8px 10px;
     border-radius:999px;
-    border:1px solid var(--stroke);
+    border:1px solid var(--stroke2);
     background: rgba(0,0,0,.16);
-    color:var(--text);
     font-size:11px;
     cursor:pointer;
     user-select:none;
@@ -170,7 +109,95 @@
     box-shadow: var(--glow);
   }
 
-  /* Scope + keyboard together */
+  /* Knob layout */
+  .knobGrid{
+    display:grid;
+    grid-template-columns: repeat(4, minmax(66px, 1fr));
+    gap:10px;
+  }
+  @media (max-width: 780px){
+    .knobGrid{ grid-template-columns: repeat(4, 1fr); }
+  }
+  .kcell{
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;
+    background: rgba(0,0,0,.14);
+    padding:8px 6px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    min-height: 92px;
+  }
+  .klabel{
+    font-size:10px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.1;
+    min-height: 22px;
+  }
+  .kval{
+    font-size:10px;
+    opacity:.9;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"].knobInput{
+    position:absolute;
+    opacity:0;
+    width:1px;
+    height:1px;
+    pointer-events:none;
+  }
+  .knob{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:1px solid var(--stroke2);
+    background:
+      radial-gradient(circle at 30% 28%, rgba(255,255,255,.18), rgba(255,255,255,0) 45%),
+      radial-gradient(circle at 50% 65%, rgba(122,162,255,.16), rgba(0,0,0,0) 52%),
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+    box-shadow: var(--glow);
+    position:relative;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .knob:active{ cursor:grabbing; }
+  .knob::after{
+    content:"";
+    position:absolute;
+    inset:9px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.06);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.12);
+  }
+  .knob .tick{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:2px;
+    height:16px;
+    transform-origin: 50% calc(100% - 1px);
+    border-radius:2px;
+    background: var(--accent);
+    box-shadow: 0 0 12px rgba(122,162,255,.25);
+    transform: translate(-50%, -100%) rotate(0deg);
+  }
+  .knob .cap{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08);
+  }
+
+  /* Play zone */
   .playZone{
     margin-top:10px;
     border:1px solid var(--stroke);
@@ -188,11 +215,26 @@
     overflow:hidden;
   }
   canvas{ display:block; width:100%; height:100%; }
+
   .playMeta{
     display:flex; justify-content:space-between; align-items:center;
     margin-top:8px;
     font-size:11px;
     color:var(--muted);
+    gap:10px;
+  }
+  .hint{
+    margin-top:8px;
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.45;
+  }
+  code{
+    background: rgba(0,0,0,.18);
+    border:1px solid rgba(122,162,255,.2);
+    padding:2px 6px;
+    border-radius:10px;
+    color:var(--text);
   }
 
   /* Touch keyboard */
@@ -213,175 +255,243 @@
     box-shadow: 0 10px 18px rgba(0,0,0,.25);
   }
   .black.down{ box-shadow: inset 0 0 0 999px rgba(122,162,255,.25); border-color: var(--accent); }
-  .hint{
-    margin-top:8px;
-    font-size:11px;
-    color:var(--muted);
-    line-height:1.45;
-  }
-  code{
-    background: rgba(0,0,0,.18);
-    border:1px solid rgba(122,162,255,.2);
-    padding:2px 6px;
-    border-radius:10px;
-    color:var(--text);
-  }
 </style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <h1 class="title">HOKUBE — MINI JUNO (WebAudio)</h1>
+      <h1 class="title">HOKUBE — MINI JUNO (Knobs) • Poly + Arp</h1>
       <div class="status" id="status">Audio OFF</div>
     </div>
     <div class="btns">
       <button id="audioBtn">Audio ON</button>
-      <button id="panicBtn" title="Notes off">Panic</button>
+      <button id="panicBtn">Panic</button>
     </div>
   </div>
 
   <div class="panel">
     <div class="row">
+      <!-- DCO -->
       <div class="block">
         <h3>DCO</h3>
-        <div class="switchRow" style="margin-bottom:10px">
+        <div class="switchRow">
           <div class="pill on" id="swSaw">SAW</div>
           <div class="pill on" id="swPulse">PULSE</div>
           <div class="pill" id="swSub">SUB</div>
           <div class="pill" id="swNoise">NOISE</div>
         </div>
-        <div class="strip">
-          <div class="sliderCol">
-            <div class="lab">PWM</div>
-            <input class="v" id="pwm" type="range" min="0.02" max="0.98" value="0.5" step="0.01">
-            <div class="val" id="pwmv">0.50</div>
+        <div class="knobGrid" id="dcoKnobs">
+          <div class="kcell">
+            <div class="klabel">PWM</div>
+            <div class="knob" data-for="pwm"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="pwmv">0.50</div>
+            <input class="knobInput" id="pwm" type="range" min="0.02" max="0.98" value="0.5" step="0.01">
           </div>
-          <div class="sliderCol">
-            <div class="lab">PWM<br>LFO</div>
-            <input class="v" id="pwmLfo" type="range" min="0" max="1" value="0.35" step="0.01">
-            <div class="val" id="pwmLfov">0.35</div>
+          <div class="kcell">
+            <div class="klabel">PWM<br>LFO</div>
+            <div class="knob" data-for="pwmLfo"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="pwmLfov">0.35</div>
+            <input class="knobInput" id="pwmLfo" type="range" min="0" max="1" value="0.35" step="0.01">
           </div>
-          <div class="sliderCol">
-            <div class="lab">DCO<br>LEVEL</div>
-            <input class="v" id="dcoLvl" type="range" min="0" max="1" value="0.7" step="0.01">
-            <div class="val" id="dcoLvlv">0.70</div>
+          <div class="kcell">
+            <div class="klabel">DCO<br>LEVEL</div>
+            <div class="knob" data-for="dcoLvl"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="dcoLvlv">0.70</div>
+            <input class="knobInput" id="dcoLvl" type="range" min="0" max="1" value="0.7" step="0.01">
+          </div>
+          <div class="kcell">
+            <div class="klabel">DETUNE</div>
+            <div class="knob" data-for="detune"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="detunev">0 c</div>
+            <input class="knobInput" id="detune" type="range" min="-12" max="12" value="0" step="1">
           </div>
         </div>
       </div>
 
+      <!-- HPF / Chorus / Poly -->
       <div class="block">
-        <h3>HPF / CHORUS</h3>
-        <div style="margin-bottom:10px">
-          <div class="status" style="margin:0 0 6px;color:var(--muted)">HPF (0–3)</div>
-          <div class="switchRow">
-            <div class="pill on" data-hpf="0">0</div>
-            <div class="pill" data-hpf="1">1</div>
-            <div class="pill" data-hpf="2">2</div>
-            <div class="pill" data-hpf="3">3</div>
-          </div>
-        </div>
-        <div>
-          <div class="status" style="margin:0 0 6px;color:var(--muted)">CHORUS</div>
-          <div class="switchRow">
-            <div class="pill on" data-cho="0">OFF</div>
-            <div class="pill" data-cho="1">I</div>
-            <div class="pill" data-cho="2">II</div>
-          </div>
+        <h3>HPF / CHORUS / POLY</h3>
+
+        <div class="status" style="margin:0 0 6px;color:var(--muted)">HPF (0–3)</div>
+        <div class="switchRow">
+          <div class="pill on" data-hpf="0">0</div>
+          <div class="pill" data-hpf="1">1</div>
+          <div class="pill" data-hpf="2">2</div>
+          <div class="pill" data-hpf="3">3</div>
         </div>
 
-        <div class="hint" style="margin-top:10px">
+        <div class="status" style="margin:10px 0 6px;color:var(--muted)">CHORUS</div>
+        <div class="switchRow">
+          <div class="pill on" data-cho="0">OFF</div>
+          <div class="pill" data-cho="1">I</div>
+          <div class="pill" data-cho="2">II</div>
+        </div>
+
+        <div class="status" style="margin:10px 0 6px;color:var(--muted)">POLYPHONY</div>
+        <div class="switchRow">
+          <div class="pill on" data-voices="6">6</div>
+          <div class="pill" data-voices="8">8</div>
+          <div class="pill" data-voices="10">10</div>
+        </div>
+
+        <div class="hint">
           PC: <code>Z S X D C V G B H N J ,</code> • Oct -/+ <code>Q</code>/<code>W</code> • Bend <code>←</code>/<code>→</code> (reset <code>↓</code>)
         </div>
       </div>
 
+      <!-- VCF / LFO / Master -->
       <div class="block">
-        <h3>VCF / VCA / LFO</h3>
-        <div class="strip">
-          <div class="sliderCol">
-            <div class="lab">CUTOFF</div>
-            <input class="v" id="cut" type="range" min="80" max="12000" value="1400" step="1">
-            <div class="val" id="cutv">1400</div>
+        <h3>VCF / LFO / MASTER</h3>
+        <div class="knobGrid">
+          <div class="kcell">
+            <div class="klabel">CUTOFF</div>
+            <div class="knob" data-for="cut"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="cutv">1400</div>
+            <input class="knobInput" id="cut" type="range" min="80" max="12000" value="1400" step="1">
           </div>
-          <div class="sliderCol">
-            <div class="lab">RES</div>
-            <input class="v" id="res" type="range" min="0.1" max="18" value="2.2" step="0.1">
-            <div class="val" id="resv">2.2</div>
+          <div class="kcell">
+            <div class="klabel">RES</div>
+            <div class="knob" data-for="res"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="resv">2.2</div>
+            <input class="knobInput" id="res" type="range" min="0.1" max="18" value="2.2" step="0.1">
           </div>
-          <div class="sliderCol">
-            <div class="lab">ENV<br>AMT</div>
-            <input class="v" id="envAmt" type="range" min="0" max="1" value="0.55" step="0.01">
-            <div class="val" id="envAmtv">0.55</div>
+          <div class="kcell">
+            <div class="klabel">ENV<br>AMT</div>
+            <div class="knob" data-for="envAmt"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="envAmtv">0.55</div>
+            <input class="knobInput" id="envAmt" type="range" min="0" max="1" value="0.55" step="0.01">
           </div>
-          <div class="sliderCol">
-            <div class="lab">LFO<br>AMT</div>
-            <input class="v" id="lfoAmt" type="range" min="0" max="1" value="0.25" step="0.01">
-            <div class="val" id="lfoAmtv">0.25</div>
+          <div class="kcell">
+            <div class="klabel">KEY<br>FOL</div>
+            <div class="knob" data-for="kfol"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="kfolv">0.35</div>
+            <input class="knobInput" id="kfol" type="range" min="0" max="1" value="0.35" step="0.01">
           </div>
-          <div class="sliderCol">
-            <div class="lab">KEY<br>FOL</div>
-            <input class="v" id="kfol" type="range" min="0" max="1" value="0.35" step="0.01">
-            <div class="val" id="kfolv">0.35</div>
-          </div>
-        </div>
 
-        <div style="margin-top:10px">
-          <div class="status" style="margin:0 0 6px;color:var(--muted)">VCA</div>
-          <div class="switchRow">
-            <div class="pill on" data-vca="env">ENV</div>
-            <div class="pill" data-vca="gate">GATE</div>
+          <div class="kcell">
+            <div class="klabel">LFO<br>RATE</div>
+            <div class="knob" data-for="lfoRate"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="lfoRatev">4.20</div>
+            <input class="knobInput" id="lfoRate" type="range" min="0.05" max="12" value="4.2" step="0.01">
           </div>
-        </div>
+          <div class="kcell">
+            <div class="klabel">LFO<br>DELAY</div>
+            <div class="knob" data-for="lfoDelay"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="lfoDelayv">0.15</div>
+            <input class="knobInput" id="lfoDelay" type="range" min="0" max="2.5" value="0.15" step="0.01">
+          </div>
+          <div class="kcell">
+            <div class="klabel">VCF<br>LFO</div>
+            <div class="knob" data-for="vcfLfoAmt"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="vcfLfoAmtv">0.25</div>
+            <input class="knobInput" id="vcfLfoAmt" type="range" min="0" max="1" value="0.25" step="0.01">
+          </div>
+          <div class="kcell">
+            <div class="klabel">MASTER</div>
+            <div class="knob" data-for="master"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="masterv">0.65</div>
+            <input class="knobInput" id="master" type="range" min="0" max="1" value="0.65" step="0.01">
+          </div>
 
-        <div style="margin-top:10px">
-          <div class="status" style="margin:0 0 6px;color:var(--muted)">LFO</div>
-          <div class="strip">
-            <div class="sliderCol">
-              <div class="lab">RATE</div>
-              <input class="v" id="lfoRate" type="range" min="0.05" max="12" value="4.2" step="0.01">
-              <div class="val" id="lfoRatev">4.20</div>
+          <div class="kcell">
+            <div class="klabel">GLIDE</div>
+            <div class="knob" data-for="glide"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="glidev">0.030</div>
+            <input class="knobInput" id="glide" type="range" min="0" max="0.25" value="0.03" step="0.001">
+          </div>
+
+          <div class="kcell">
+            <div class="klabel">VCA</div>
+            <div class="switchRow" style="margin:0; justify-content:center">
+              <div class="pill on" data-vca="env">ENV</div>
+              <div class="pill" data-vca="gate">GATE</div>
             </div>
-            <div class="sliderCol">
-              <div class="lab">DELAY</div>
-              <input class="v" id="lfoDelay" type="range" min="0" max="2.5" value="0.15" step="0.01">
-              <div class="val" id="lfoDelayv">0.15</div>
+            <div class="kval" style="opacity:.7">—</div>
+          </div>
+
+          <div class="kcell">
+            <div class="klabel">ARP</div>
+            <div class="switchRow" style="margin:0; justify-content:center">
+              <div class="pill" id="arpOn">ON</div>
+              <div class="pill on" id="arpOff">OFF</div>
             </div>
-            <div class="sliderCol">
-              <div class="lab">GLIDE</div>
-              <input class="v" id="glide" type="range" min="0" max="0.25" value="0.03" step="0.001">
-              <div class="val" id="glidev">0.030</div>
+            <div class="kval" id="arpState">OFF</div>
+          </div>
+
+          <div class="kcell">
+            <div class="klabel">ARP<br>MODE</div>
+            <div class="switchRow" style="margin:0; justify-content:center">
+              <div class="pill on" data-arpmode="up">UP</div>
+              <div class="pill" data-arpmode="down">DOWN</div>
+              <div class="pill" data-arpmode="rand">RAND</div>
             </div>
-            <div class="sliderCol">
-              <div class="lab">MASTER</div>
-              <input class="v" id="master" type="range" min="0" max="1" value="0.65" step="0.01">
-              <div class="val" id="masterv">0.65</div>
-            </div>
+            <div class="kval" id="arpModeV">UP</div>
+          </div>
+
+          <div class="kcell">
+            <div class="klabel">ARP<br>RATE</div>
+            <div class="knob" data-for="arpRate"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="arpRatev">8.0</div>
+            <input class="knobInput" id="arpRate" type="range" min="1" max="20" value="8" step="0.1">
+          </div>
+
+          <div class="kcell">
+            <div class="klabel">ARP<br>GATE</div>
+            <div class="knob" data-for="arpGate"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="arpGatev">0.60</div>
+            <input class="knobInput" id="arpGate" type="range" min="0.1" max="0.95" value="0.6" step="0.01">
+          </div>
+
+          <div class="kcell">
+            <div class="klabel">ARP<br>OCT</div>
+            <div class="knob" data-for="arpOct"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="arpOctv">1</div>
+            <input class="knobInput" id="arpOct" type="range" min="1" max="3" value="1" step="1">
           </div>
         </div>
       </div>
 
+      <!-- ENV -->
       <div class="block" style="grid-column: 1 / -1;">
         <h3>ENV (ADSR)</h3>
-        <div class="strip" style="justify-content:flex-start">
-          <div class="sliderCol">
-            <div class="lab">A</div>
-            <input class="v" id="A" type="range" min="0.001" max="2" value="0.01" step="0.001">
-            <div class="val" id="Av">0.010</div>
+        <div class="knobGrid" style="grid-template-columns: repeat(6, minmax(66px, 1fr));">
+          <div class="kcell">
+            <div class="klabel">A</div>
+            <div class="knob" data-for="A"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="Av">0.010</div>
+            <input class="knobInput" id="A" type="range" min="0.001" max="2" value="0.01" step="0.001">
           </div>
-          <div class="sliderCol">
-            <div class="lab">D</div>
-            <input class="v" id="D" type="range" min="0.01" max="2.5" value="0.25" step="0.01">
-            <div class="val" id="Dv">0.25</div>
+          <div class="kcell">
+            <div class="klabel">D</div>
+            <div class="knob" data-for="D"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="Dv">0.25</div>
+            <input class="knobInput" id="D" type="range" min="0.01" max="2.5" value="0.25" step="0.01">
           </div>
-          <div class="sliderCol">
-            <div class="lab">S</div>
-            <input class="v" id="S" type="range" min="0" max="1" value="0.75" step="0.01">
-            <div class="val" id="Sv">0.75</div>
+          <div class="kcell">
+            <div class="klabel">S</div>
+            <div class="knob" data-for="S"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="Sv">0.75</div>
+            <input class="knobInput" id="S" type="range" min="0" max="1" value="0.75" step="0.01">
           </div>
-          <div class="sliderCol">
-            <div class="lab">R</div>
-            <input class="v" id="R" type="range" min="0.01" max="3" value="0.35" step="0.01">
-            <div class="val" id="Rv">0.35</div>
+          <div class="kcell">
+            <div class="klabel">R</div>
+            <div class="knob" data-for="R"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="Rv">0.35</div>
+            <input class="knobInput" id="R" type="range" min="0.01" max="3" value="0.35" step="0.01">
+          </div>
+          <div class="kcell">
+            <div class="klabel">VEL<br>TO AMP</div>
+            <div class="knob" data-for="velAmt"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="velAmtv">0.00</div>
+            <input class="knobInput" id="velAmt" type="range" min="0" max="1" value="0" step="0.01">
+          </div>
+          <div class="kcell">
+            <div class="klabel">VEL<br>TO VCF</div>
+            <div class="knob" data-for="velVcf"><div class="tick"></div><div class="cap"></div></div>
+            <div class="kval" id="velVcfv">0.00</div>
+            <input class="knobInput" id="velVcf" type="range" min="0" max="1" value="0" step="0.01">
           </div>
         </div>
       </div>
@@ -392,7 +502,7 @@
         <canvas id="scope" width="900" height="140"></canvas>
       </div>
       <div class="playMeta">
-        <div>Clavier touch (monophonique last-note)</div>
+        <div>Clavier touch • Poly (ARP OFF) • Arp sur notes tenues (ARP ON)</div>
         <div id="noteInfo">—</div>
       </div>
       <div class="keyboard" id="keyboard"></div>
@@ -402,12 +512,13 @@
 
 <script>
 (() => {
-  // ----- Helpers -----
+  // ========= Helpers =========
   const $ = (id) => document.getElementById(id);
   const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
   const midiToFreq = (m)=> 440*Math.pow(2,(m-69)/12);
+  const now = ()=> ctx ? ctx.currentTime : 0;
 
-  // ----- UI refs -----
+  // ========= UI refs =========
   const statusEl = $("status");
   const noteInfo = $("noteInfo");
   const audioBtn = $("audioBtn");
@@ -418,67 +529,187 @@
   const swSub = $("swSub");
   const swNoise = $("swNoise");
 
-  const pwm = $("pwm"), pwmv=$("pwmv");
-  const pwmLfo = $("pwmLfo"), pwmLfov=$("pwmLfov");
-  const dcoLvl = $("dcoLvl"), dcoLvlv=$("dcoLvlv");
+  const pwm = $("pwm"), pwmv = $("pwmv");
+  const pwmLfo = $("pwmLfo"), pwmLfov = $("pwmLfov");
+  const dcoLvl = $("dcoLvl"), dcoLvlv = $("dcoLvlv");
+  const detune = $("detune"), detunev = $("detunev");
 
-  const cut = $("cut"), cutv=$("cutv");
-  const res = $("res"), resv=$("resv");
-  const envAmt = $("envAmt"), envAmtv=$("envAmtv");
-  const lfoAmt = $("lfoAmt"), lfoAmtv=$("lfoAmtv");
-  const kfol = $("kfol"), kfolv=$("kfolv");
+  const cut = $("cut"), cutv = $("cutv");
+  const res = $("res"), resv = $("resv");
+  const envAmt = $("envAmt"), envAmtv = $("envAmtv");
+  const kfol = $("kfol"), kfolv = $("kfolv");
+  const lfoRate = $("lfoRate"), lfoRatev = $("lfoRatev");
+  const lfoDelay = $("lfoDelay"), lfoDelayv = $("lfoDelayv");
+  const vcfLfoAmt = $("vcfLfoAmt"), vcfLfoAmtv = $("vcfLfoAmtv");
+  const glide = $("glide"), glidev = $("glidev");
+  const master = $("master"), masterv = $("masterv");
 
-  const lfoRate = $("lfoRate"), lfoRatev=$("lfoRatev");
-  const lfoDelay = $("lfoDelay"), lfoDelayv=$("lfoDelayv");
-  const glide = $("glide"), glidev=$("glidev");
-  const master = $("master"), masterv=$("masterv");
+  const A = $("A"), Av = $("Av");
+  const D = $("D"), Dv = $("Dv");
+  const S = $("S"), Sv = $("Sv");
+  const R = $("R"), Rv = $("Rv");
+  const velAmt = $("velAmt"), velAmtv = $("velAmtv");
+  const velVcf = $("velVcf"), velVcfv = $("velVcfv");
 
-  const A = $("A"), Av=$("Av");
-  const D = $("D"), Dv=$("Dv");
-  const S = $("S"), Sv=$("Sv");
-  const R = $("R"), Rv=$("Rv");
+  // Arp UI
+  const arpOnBtn = $("arpOn");
+  const arpOffBtn = $("arpOff");
+  const arpState = $("arpState");
+  const arpModeV = $("arpModeV");
+  const arpRate = $("arpRate"), arpRatev = $("arpRatev");
+  const arpGate = $("arpGate"), arpGatev = $("arpGatev");
+  const arpOct = $("arpOct"), arpOctv = $("arpOctv");
 
-  // ----- State -----
-  let ctx=null;
-  let analyser=null;
-  let scopeRAF=0;
+  // ========= State =========
+  let ctx = null;
+  let analyser = null;
+  let scopeRAF = 0;
 
-  let held = new Map(); // key->midi (last note priority)
-  let lastMidi=null;
-  let octave=0;
-  let pitchBend=0; // -1..+1
-  const bendSemis=2;
+  // Sound toggles (Juno-ish)
+  let onSaw = true, onPulse = true, onSub = false, onNoise = false;
 
-  // Juno-ish toggles
-  let onSaw=true, onPulse=true, onSub=false, onNoise=false;
-  let hpfStep=0;          // 0..3
-  let chorusMode=0;       // 0 off, 1, 2
-  let vcaMode="env";      // env or gate
+  // HPF / Chorus / VCA
+  let hpfStep = 0;          // 0..3
+  let chorusMode = 0;       // 0 off,1,2
+  let vcaMode = "env";      // env | gate
 
-  // ----- Audio nodes -----
-  let masterGain, ampGain, vcf, hpf;
-  let mixGain;
-  let dcoOsc, subOsc, noiseSrc;
-  let dcoGain, subGain, noiseGain;
+  // Polyphony
+  let maxVoices = 6;
 
-  // PWM trick: mix saw+inverted saw to approximate pulse? We'll do native square + duty using waveshaper approach:
-  // Simpler: use OscillatorNode square, then use waveshaper + dc offset is messy.
-  // Instead: use PeriodicWave morphing? Too heavy.
-  // Practical mobile-friendly: emulate PWM by crossfading two squares with slight phase? We'll approximate using WaveShaper on saw.
-  // Here: we keep square but approximate duty via WaveShaper on sawtooth -> pulse.
-  let pwmShaper;
-  let lfoOsc, lfoGainNode, lfoDelayGain;
+  // Keyboard hold
+  const held = new Map(); // keyId -> midi
+  let octave = 0;
+  let pitchBend = 0; // -1..+1
+  const bendSemis = 2;
 
-  // Chorus
-  let chorIn, chorSplit, chorMerger;
-  let chorDelayL, chorDelayR, chorLfo, chorLfoGain;
-  let chorWet, chorDry;
+  // Arpeggiator
+  let arpEnabled = false;
+  let arpMode = "up"; // up|down|rand
+  let arpTimer = 0;
+  let arpIndex = 0;
+  let arpLastVoice = null;
 
-  const scopeCanvas = $("scope");
-  const sctx = scopeCanvas.getContext("2d");
+  // ========= Audio Graph =========
+  let masterGain, globalHPF;
+  let chorIn, chorDry, chorWet, chorSplit, chorMerger, chorDelayL, chorDelayR, chorLfo, chorLfoGain;
+  let mixBus; // sum voices -> chorus input
+  let shaper;
 
-  function now(){ return ctx ? ctx.currentTime : 0; }
+  // Global LFO
+  let lfoOsc, lfoGain, lfoDelayGain;
 
+  // Voices
+  const voices = []; // {busy, midi, startedAt, vel, ...nodes}
+  let voiceCounter = 0;
+
+  // ========= Knobs =========
+  function knobAngleFromValue(v, min, max){
+    const t = (v - min) / (max - min);
+    return -135 + t * 270;
+  }
+  function valueFromDelta(startValue, deltaPx, min, max, step){
+    const range = (max - min);
+    const dv = -(deltaPx / 140) * range;
+    let v = startValue + dv;
+    if (step > 0) v = Math.round(v / step) * step;
+    const dec = (String(step).split(".")[1] || "").length;
+    v = +v.toFixed(dec);
+    return clamp(v, min, max);
+  }
+
+  function attachKnob(knobEl, rangeEl, onInput){
+    const tick = knobEl.querySelector(".tick");
+    const min = parseFloat(rangeEl.min ?? "0");
+    const max = parseFloat(rangeEl.max ?? "1");
+    const step = parseFloat(rangeEl.step ?? "0.01");
+
+    function render(){
+      const v = parseFloat(rangeEl.value);
+      const ang = knobAngleFromValue(v, min, max);
+      tick.style.transform = `translate(-50%, -100%) rotate(${ang}deg)`;
+    }
+
+    // drag
+    let dragging=false, startY=0, startX=0, startVal=0;
+    knobEl.addEventListener("pointerdown",(e)=>{
+      e.preventDefault();
+      dragging=true;
+      knobEl.setPointerCapture(e.pointerId);
+      startY=e.clientY; startX=e.clientX;
+      startVal=parseFloat(rangeEl.value);
+    });
+    knobEl.addEventListener("pointermove",(e)=>{
+      if(!dragging) return;
+      const dy=e.clientY-startY;
+      const dx=e.clientX-startX;
+      const delta=dy + dx*0.6;
+      const v=valueFromDelta(startVal, delta, min, max, step);
+      if(v !== parseFloat(rangeEl.value)){
+        rangeEl.value=String(v);
+        rangeEl.dispatchEvent(new Event("input",{bubbles:true}));
+        render();
+      }
+    });
+    knobEl.addEventListener("pointerup",()=>dragging=false);
+    knobEl.addEventListener("pointercancel",()=>dragging=false);
+
+    // wheel
+    knobEl.addEventListener("wheel",(e)=>{
+      e.preventDefault();
+      const dir=Math.sign(e.deltaY);
+      const v0=parseFloat(rangeEl.value);
+      const inc = (step>0? step : (max-min)/200);
+      const v=clamp(v0 - dir*inc, min, max);
+      rangeEl.value=String(v);
+      rangeEl.dispatchEvent(new Event("input",{bubbles:true}));
+      render();
+    },{passive:false});
+
+    rangeEl.addEventListener("input",()=>{
+      render();
+      onInput?.();
+    });
+
+    render();
+  }
+
+  // ========= UI display =========
+  function setDisplays(){
+    pwmv.textContent=(+pwm.value).toFixed(2);
+    pwmLfov.textContent=(+pwmLfo.value).toFixed(2);
+    dcoLvlv.textContent=(+dcoLvl.value).toFixed(2);
+    detunev.textContent=`${detune.value} c`;
+
+    cutv.textContent=String(Math.round(+cut.value));
+    resv.textContent=(+res.value).toFixed(1);
+    envAmtv.textContent=(+envAmt.value).toFixed(2);
+    kfolv.textContent=(+kfol.value).toFixed(2);
+    lfoRatev.textContent=(+lfoRate.value).toFixed(2);
+    lfoDelayv.textContent=(+lfoDelay.value).toFixed(2);
+    vcfLfoAmtv.textContent=(+vcfLfoAmt.value).toFixed(2);
+
+    glidev.textContent=(+glide.value).toFixed(3);
+    masterv.textContent=(+master.value).toFixed(2);
+
+    Av.textContent=(+A.value).toFixed(3);
+    Dv.textContent=(+D.value).toFixed(2);
+    Sv.textContent=(+S.value).toFixed(2);
+    Rv.textContent=(+R.value).toFixed(2);
+
+    velAmtv.textContent=(+velAmt.value).toFixed(2);
+    velVcfv.textContent=(+velVcf.value).toFixed(2);
+
+    arpRatev.textContent=(+arpRate.value).toFixed(1);
+    arpGatev.textContent=(+arpGate.value).toFixed(2);
+    arpOctv.textContent=String(+arpOct.value|0);
+    arpModeV.textContent = arpMode.toUpperCase();
+    arpState.textContent = arpEnabled ? "ON" : "OFF";
+  }
+  setDisplays();
+
+  function togglePill(el, on){ el.classList.toggle("on", !!on); }
+
+  // ========= Audio =========
   function makeSoftClipCurve(amount){
     const n=2048, curve=new Float32Array(n);
     for(let i=0;i<n;i++){
@@ -488,37 +719,8 @@
     return curve;
   }
 
-  function setDisplays(){
-    pwmv.textContent=(+pwm.value).toFixed(2);
-    pwmLfov.textContent=(+pwmLfo.value).toFixed(2);
-    dcoLvlv.textContent=(+dcoLvl.value).toFixed(2);
-
-    cutv.textContent = String(Math.round(+cut.value));
-    resv.textContent = (+res.value).toFixed(1);
-    envAmtv.textContent = (+envAmt.value).toFixed(2);
-    lfoAmtv.textContent = (+lfoAmt.value).toFixed(2);
-    kfolv.textContent = (+kfol.value).toFixed(2);
-
-    lfoRatev.textContent = (+lfoRate.value).toFixed(2);
-    lfoDelayv.textContent = (+lfoDelay.value).toFixed(2);
-    glidev.textContent = (+glide.value).toFixed(3);
-    masterv.textContent = (+master.value).toFixed(2);
-
-    Av.textContent=(+A.value).toFixed(3);
-    Dv.textContent=(+D.value).toFixed(2);
-    Sv.textContent=(+S.value).toFixed(2);
-    Rv.textContent=(+R.value).toFixed(2);
-  }
-  setDisplays();
-
-  function togglePill(el, on){ el.classList.toggle("on", !!on); }
-
-  // ----- PWM waveshaper (saw -> pulse approximation) -----
-  function updatePwmShaper(){
-    if(!pwmShaper) return;
-    const duty = +pwm.value; // 0.02..0.98
-    // simple transfer: map saw (-1..1) to pulse using threshold
-    // y=sign(x - thresh). thresh in [-1..1]
+  function makePulseShaperCurve(duty){
+    // saw (-1..1) -> pulse via threshold (simple + mobile friendly)
     const thresh = (duty*2 - 1); // -1..1
     const n=1024;
     const curve=new Float32Array(n);
@@ -526,176 +728,7 @@
       const x=(i/(n-1))*2-1;
       curve[i] = (x > thresh) ? 1 : -1;
     }
-    pwmShaper.curve = curve;
-    pwmShaper.oversample = "2x";
-  }
-
-  // ----- Build audio graph -----
-  function ensureAudio(){
-    if(ctx) return;
-    ctx = new (window.AudioContext||window.webkitAudioContext)();
-
-    // Master
-    masterGain = ctx.createGain();
-    masterGain.gain.value = +master.value;
-
-    // Amp (VCA)
-    ampGain = ctx.createGain();
-    ampGain.gain.value = 0.0001;
-
-    // Filter chain: HPF -> VCF -> VCA
-    hpf = ctx.createBiquadFilter();
-    hpf.type = "highpass";
-    hpf.frequency.value = 20;
-
-    vcf = ctx.createBiquadFilter();
-    vcf.type = "lowpass";
-    vcf.frequency.value = +cut.value;
-    vcf.Q.value = +res.value;
-
-    // Mix
-    mixGain = ctx.createGain();
-    mixGain.gain.value = 1;
-
-    // Soft clip (Juno-ish grit)
-    const shaper = ctx.createWaveShaper();
-    shaper.curve = makeSoftClipCurve(0.9);
-    shaper.oversample = "2x";
-
-    // Analyser
-    analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.86;
-
-    // Chorus routing (dry/wet)
-    chorIn = ctx.createGain();
-    chorDry = ctx.createGain();
-    chorWet = ctx.createGain();
-    chorDry.gain.value = 1;
-    chorWet.gain.value = 0; // off default
-
-    chorSplit = ctx.createChannelSplitter(2);
-    chorMerger = ctx.createChannelMerger(2);
-
-    chorDelayL = ctx.createDelay(0.05);
-    chorDelayR = ctx.createDelay(0.05);
-    chorDelayL.delayTime.value = 0.018;
-    chorDelayR.delayTime.value = 0.024;
-
-    // chorus LFO
-    chorLfo = ctx.createOscillator();
-    chorLfo.type = "triangle";
-    chorLfo.frequency.value = 0.8;
-
-    chorLfoGain = ctx.createGain();
-    chorLfoGain.gain.value = 0.004; // depth seconds
-
-    chorLfo.connect(chorLfoGain);
-    chorLfoGain.connect(chorDelayL.delayTime);
-    chorLfoGain.connect(chorDelayR.delayTime);
-    chorLfo.start();
-
-    // Chor path: input -> split -> delays -> merger -> wet
-    chorIn.connect(chorSplit);
-    chorSplit.connect(chorDelayL, 0);
-    chorSplit.connect(chorDelayR, 1);
-    chorDelayL.connect(chorMerger, 0, 0);
-    chorDelayR.connect(chorMerger, 0, 1);
-    chorMerger.connect(chorWet);
-
-    // Dry taps
-    chorIn.connect(chorDry);
-
-    // Sum dry+wet -> hpf -> shaper -> vcf -> vca -> analyser -> master
-    const chorSum = ctx.createGain();
-    chorDry.connect(chorSum);
-    chorWet.connect(chorSum);
-
-    chorSum.connect(hpf);
-    hpf.connect(shaper);
-    shaper.connect(vcf);
-    vcf.connect(ampGain);
-    ampGain.connect(analyser);
-    analyser.connect(masterGain);
-    masterGain.connect(ctx.destination);
-
-    // DCO saw -> PWM shaper -> (mix)
-    dcoOsc = ctx.createOscillator();
-    dcoOsc.type = "sawtooth";
-
-    pwmShaper = ctx.createWaveShaper();
-    updatePwmShaper();
-
-    // We’ll create two branches:
-    // - SAW branch: direct saw
-    // - PULSE branch: saw -> shaper pulse
-    const sawGain = ctx.createGain();
-    const pulseGain = ctx.createGain();
-
-    // Levels will be set in updateAudioParams
-    sawGain.gain.value = onSaw ? 0.6 : 0;
-    pulseGain.gain.value = onPulse ? 0.6 : 0;
-
-    dcoOsc.connect(sawGain);
-    dcoOsc.connect(pwmShaper);
-    pwmShaper.connect(pulseGain);
-
-    dcoGain = ctx.createGain();
-    dcoGain.gain.value = +dcoLvl.value;
-
-    sawGain.connect(dcoGain);
-    pulseGain.connect(dcoGain);
-
-    // Sub
-    subOsc = ctx.createOscillator();
-    subOsc.type = "square";
-    subGain = ctx.createGain();
-    subGain.gain.value = onSub ? 0.35 : 0;
-
-    // Noise
-    noiseGain = ctx.createGain();
-    noiseGain.gain.value = onNoise ? 0.18 : 0;
-    noiseSrc = ctx.createBufferSource();
-    noiseSrc.buffer = makeNoiseBuffer(ctx, 2.0);
-    noiseSrc.loop = true;
-
-    // Sum sources -> chorus input
-    dcoGain.connect(chorIn);
-    subOsc.connect(subGain); subGain.connect(chorIn);
-    noiseSrc.connect(noiseGain); noiseGain.connect(chorIn);
-
-    // LFO (for PWM + VCF)
-    lfoOsc = ctx.createOscillator();
-    lfoOsc.type = "triangle";
-    lfoOsc.frequency.value = +lfoRate.value;
-
-    lfoGainNode = ctx.createGain(); // base depth (0..1 scaled later)
-    lfoGainNode.gain.value = 1;
-
-    // LFO delay envelope
-    lfoDelayGain = ctx.createGain();
-    lfoDelayGain.gain.value = 0;
-
-    lfoOsc.connect(lfoGainNode);
-    lfoGainNode.connect(lfoDelayGain);
-
-    // Connect LFO -> PWM threshold modulation (we modulate duty value manually in tick loop, lightweight)
-    // And LFO -> VCF frequency via AudioParam:
-    const vcfLfoAmt = ctx.createGain();
-    vcfLfoAmt.gain.value = 0; // set in updateAudioParams
-
-    lfoDelayGain.connect(vcfLfoAmt);
-    vcfLfoAmt.connect(vcf.frequency);
-
-    // Start sources
-    dcoOsc.start();
-    subOsc.start();
-    noiseSrc.start();
-    lfoOsc.start();
-
-    statusEl.textContent = `Audio ready (${ctx.sampleRate} Hz)`;
-    startScope();
-    updateAudioParams();
+    return curve;
   }
 
   function makeNoiseBuffer(ctx, seconds){
@@ -706,11 +739,206 @@
     return b;
   }
 
+  function ensureAudio(){
+    if(ctx) return;
+    ctx = new (window.AudioContext||window.webkitAudioContext)();
+
+    // Master
+    masterGain = ctx.createGain();
+    masterGain.gain.value = +master.value;
+
+    // Global HPF (Juno-ish)
+    globalHPF = ctx.createBiquadFilter();
+    globalHPF.type = "highpass";
+    globalHPF.frequency.value = 20;
+
+    // Soft clip
+    shaper = ctx.createWaveShaper();
+    shaper.curve = makeSoftClipCurve(0.9);
+    shaper.oversample = "2x";
+
+    // Analyser
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.86;
+
+    // Mix bus (sum voices)
+    mixBus = ctx.createGain();
+    mixBus.gain.value = 1;
+
+    // Chorus (dry/wet)
+    chorIn = ctx.createGain();
+    chorDry = ctx.createGain();
+    chorWet = ctx.createGain();
+    chorDry.gain.value = 1;
+    chorWet.gain.value = 0;
+
+    chorSplit = ctx.createChannelSplitter(2);
+    chorMerger = ctx.createChannelMerger(2);
+    chorDelayL = ctx.createDelay(0.05);
+    chorDelayR = ctx.createDelay(0.05);
+    chorDelayL.delayTime.value = 0.018;
+    chorDelayR.delayTime.value = 0.024;
+
+    chorLfo = ctx.createOscillator();
+    chorLfo.type = "triangle";
+    chorLfo.frequency.value = 0.8;
+
+    chorLfoGain = ctx.createGain();
+    chorLfoGain.gain.value = 0.004;
+
+    chorLfo.connect(chorLfoGain);
+    chorLfoGain.connect(chorDelayL.delayTime);
+    chorLfoGain.connect(chorDelayR.delayTime);
+    chorLfo.start();
+
+    // Routing: mixBus -> chorIn -> (dry + wet) -> HPF -> shaper -> analyser -> master -> dest
+    mixBus.connect(chorIn);
+    chorIn.connect(chorDry);
+    chorIn.connect(chorSplit);
+    chorSplit.connect(chorDelayL,0);
+    chorSplit.connect(chorDelayR,1);
+    chorDelayL.connect(chorMerger,0,0);
+    chorDelayR.connect(chorMerger,0,1);
+    chorMerger.connect(chorWet);
+
+    const chorSum = ctx.createGain();
+    chorDry.connect(chorSum);
+    chorWet.connect(chorSum);
+
+    chorSum.connect(globalHPF);
+    globalHPF.connect(shaper);
+    shaper.connect(analyser);
+    analyser.connect(masterGain);
+    masterGain.connect(ctx.destination);
+
+    // Global LFO (for PWM + VCF)
+    lfoOsc = ctx.createOscillator();
+    lfoOsc.type = "triangle";
+    lfoOsc.frequency.value = +lfoRate.value;
+
+    lfoGain = ctx.createGain();
+    lfoGain.gain.value = 1;
+
+    lfoDelayGain = ctx.createGain();
+    lfoDelayGain.gain.value = 0;
+
+    lfoOsc.connect(lfoGain);
+    lfoGain.connect(lfoDelayGain);
+    lfoOsc.start();
+
+    // Voices
+    rebuildVoices(maxVoices);
+
+    // Defaults
+    setHPF(hpfStep);
+    setChorus(chorusMode);
+
+    statusEl.textContent = `Audio ready (${ctx.sampleRate} Hz)`;
+    startScope();
+  }
+
+  function rebuildVoices(n){
+    // Stop old voices if any
+    for(const v of voices){
+      try{ v.dcoOsc?.stop(); }catch(e){}
+      try{ v.subOsc?.stop(); }catch(e){}
+      try{ v.noiseSrc?.stop(); }catch(e){}
+      // nodes will be GC'd
+    }
+    voices.length = 0;
+
+    for(let i=0;i<n;i++){
+      voices.push(makeVoice());
+    }
+  }
+
+  function makeVoice(){
+    // Per voice: DCO (saw + pulse shaper) + sub + noise -> vcf -> vca -> mixBus
+    const v = {
+      id: ++voiceCounter,
+      busy: false,
+      midi: null,
+      vel: 1,
+      startedAt: 0,
+      releaseAt: 0,
+
+      // nodes
+      dcoOsc: null, subOsc: null, noiseSrc: null,
+      sawGain: null, pulseGain: null, dcoGain: null, subGain: null, noiseGain: null,
+      pulseShaper: null,
+      vcf: null,
+      vca: null,
+
+      // lfo modulation nodes
+      vcfLfoGain: null
+    };
+
+    v.dcoOsc = ctx.createOscillator();
+    v.dcoOsc.type = "sawtooth";
+
+    v.pulseShaper = ctx.createWaveShaper();
+    v.pulseShaper.curve = makePulseShaperCurve(+pwm.value);
+    v.pulseShaper.oversample = "2x";
+
+    v.sawGain = ctx.createGain();
+    v.pulseGain = ctx.createGain();
+    v.dcoGain = ctx.createGain();
+    v.dcoGain.gain.value = +dcoLvl.value;
+
+    v.dcoOsc.connect(v.sawGain);
+    v.dcoOsc.connect(v.pulseShaper);
+    v.pulseShaper.connect(v.pulseGain);
+
+    v.sawGain.connect(v.dcoGain);
+    v.pulseGain.connect(v.dcoGain);
+
+    v.subOsc = ctx.createOscillator();
+    v.subOsc.type = "square";
+    v.subGain = ctx.createGain();
+    v.subGain.gain.value = 0;
+
+    v.noiseGain = ctx.createGain();
+    v.noiseGain.gain.value = 0;
+    v.noiseSrc = ctx.createBufferSource();
+    v.noiseSrc.buffer = makeNoiseBuffer(ctx, 2.0);
+    v.noiseSrc.loop = true;
+
+    // filter + amp
+    v.vcf = ctx.createBiquadFilter();
+    v.vcf.type = "lowpass";
+    v.vcf.frequency.value = +cut.value;
+    v.vcf.Q.value = +res.value;
+
+    v.vca = ctx.createGain();
+    v.vca.gain.value = 0.0001;
+
+    // LFO -> VCF freq
+    v.vcfLfoGain = ctx.createGain();
+    v.vcfLfoGain.gain.value = 0;
+
+    lfoDelayGain.connect(v.vcfLfoGain);
+    v.vcfLfoGain.connect(v.vcf.frequency);
+
+    // sum
+    v.dcoGain.connect(v.vcf);
+    v.subOsc.connect(v.subGain); v.subGain.connect(v.vcf);
+    v.noiseSrc.connect(v.noiseGain); v.noiseGain.connect(v.vcf);
+    v.vcf.connect(v.vca);
+    v.vca.connect(mixBus);
+
+    // start sources
+    v.dcoOsc.start();
+    v.subOsc.start();
+    v.noiseSrc.start();
+
+    return v;
+  }
+
   function setHPF(step){
     hpfStep = step;
-    // Rough Juno-ish steps (very approximate)
-    const freqs = [20, 90, 190, 380];
-    if(hpf) hpf.frequency.setTargetAtTime(freqs[step] ?? 20, now(), 0.01);
+    const freqs = [20, 90, 190, 380]; // approx Juno steps
+    if(globalHPF) globalHPF.frequency.setTargetAtTime(freqs[step] ?? 20, now(), 0.01);
     document.querySelectorAll("[data-hpf]").forEach(el=>{
       togglePill(el, +el.dataset.hpf === step);
     });
@@ -722,7 +950,7 @@
       togglePill(el, +el.dataset.cho === mode);
     });
     if(!ctx) return;
-    // OFF: wet 0. I: subtle. II: deeper+faster
+
     if(mode===0){
       chorWet.gain.setTargetAtTime(0, now(), 0.02);
       chorDry.gain.setTargetAtTime(1, now(), 0.02);
@@ -750,188 +978,304 @@
     });
   }
 
-  function updateAudioParams(){
+  function setVoices(n){
+    maxVoices = n;
+    document.querySelectorAll("[data-voices]").forEach(el=>{
+      togglePill(el, +el.dataset.voices === n);
+    });
+    if(ctx){
+      // Try to keep sound smooth: panic then rebuild
+      panic(true);
+      rebuildVoices(n);
+    }
+  }
+
+  function updateAllAudioParams(){
     setDisplays();
     if(!ctx) return;
 
     masterGain.gain.setTargetAtTime(+master.value, now(), 0.01);
-    vcf.Q.setTargetAtTime(+res.value, now(), 0.01);
-
-    // LFO params + delay ramp
     lfoOsc.frequency.setTargetAtTime(+lfoRate.value, now(), 0.01);
-    const d = +lfoDelay.value;
-    // Start at 0 then ramp to 1 over "delay" after noteOn
-    // We'll schedule per note in noteOn() by setting lfoDelayGain.gain there.
 
-    // DCO overall
-    dcoGain.gain.setTargetAtTime(+dcoLvl.value, now(), 0.01);
+    // Update each voice
+    const duty = +pwm.value;
+    const dcoLevel = +dcoLvl.value;
+    const q = +res.value;
 
-    // Noise/sub toggles
-    subGain.gain.setTargetAtTime(onSub ? 0.35 : 0.0, now(), 0.01);
-    noiseGain.gain.setTargetAtTime(onNoise ? 0.18 : 0.0, now(), 0.01);
+    for(const v of voices){
+      v.dcoGain.gain.setTargetAtTime(dcoLevel, now(), 0.01);
+      v.vcf.Q.setTargetAtTime(q, now(), 0.01);
+      v.pulseShaper.curve = makePulseShaperCurve(duty);
 
-    // HPF is already set by setHPF()
+      // Toggle wave sources (simple on/off gains)
+      v.sawGain.gain.setTargetAtTime(onSaw ? 0.7 : 0.0, now(), 0.01);
+      v.pulseGain.gain.setTargetAtTime(onPulse ? 0.7 : 0.0, now(), 0.01);
 
-    // VCF base cutoff (envelope + lfo add later)
-    // We keep base cutoff as UI value; env adds in envOn; lfo adds always (via connection)
-    // lfo amount: we scale by cutoff to keep musical-ish range
-    const lfoAmount = +lfoAmt.value; // 0..1
-    const lfoHzDepth = (Math.max(80, +cut.value) * 0.35) * lfoAmount; // scale
-    // set via gain node into vcf.frequency: we can’t directly scale if already connected
-    // easiest: set vcfLfoAmt.gain by finding that node? We created it inside ensureAudio.
-    // We'll stash it:
+      v.subGain.gain.setTargetAtTime(onSub ? 0.35 : 0.0, now(), 0.01);
+      v.noiseGain.gain.setTargetAtTime(onNoise ? 0.18 : 0.0, now(), 0.01);
+
+      // LFO depth -> VCF frequency
+      const baseCut = +cut.value;
+      const depthHz = (Math.max(80, baseCut) * 0.35) * (+vcfLfoAmt.value);
+      v.vcfLfoGain.gain.setTargetAtTime(depthHz, now(), 0.03);
+    }
   }
 
-  // Stash VCF LFO gain node (created in ensureAudio)
-  let vcfLfoAmtNode=null;
+  // ========= Voice allocation =========
+  function pickVoiceForNote(midi){
+    // Prefer free voice; else steal oldest (earliest startedAt)
+    let free = voices.find(v=>!v.busy);
+    if(free) return free;
 
-  function ensureVcfLfoAmtNode(){
-    if(vcfLfoAmtNode) return;
-    // Hack: we can’t find node in graph; instead create it once and use it.
-    // We will create it in ensureAudio earlier — but we didn’t store it there yet.
+    let oldest = voices[0];
+    for(const v of voices){
+      if(v.startedAt < oldest.startedAt) oldest = v;
+    }
+    // Steal: force fast release and reuse
+    forceRelease(oldest, 0.015);
+    return oldest;
   }
 
-  // Patch ensureAudio to store vcfLfoAmt node (we'll do a simple approach: create global and use)
-  const _ensureAudio = ensureAudio;
-  ensureAudio = function(){
-    if(ctx) return;
-    _ensureAudio();
-    // After graph creation, capture the node by re-creating: simplest is to create it globally instead.
-  };
-
-  // Since we already built graph, let's rebuild properly with stored node:
-  // (To keep code short, we’ll just do it once by reloading page; in practice, this is fine.)
-  // So we actually store in the first build: implement by redefining _ensureAudio was too late in this snippet.
-  // Instead: we’ll compute LFO->VCF by a dedicated gain node created now if missing and rewire once.
-  function wireVcfLfoIfNeeded(){
-    if(!ctx || vcfLfoAmtNode) return;
-    vcfLfoAmtNode = ctx.createGain();
-    vcfLfoAmtNode.gain.value = 0;
-
-    // Disconnect previous accidental direct connection:
-    // We connected lfoDelayGain -> vcf.frequency earlier via an unnamed node.
-    // To avoid complexity, we just ALSO connect through this node (sum is fine) and keep old depth tiny by setting lfoAmt slider default modest.
-    // For clean graph you'd store the node from the beginning; this is good enough for a compact demo.
-    lfoDelayGain.connect(vcfLfoAmtNode);
-    vcfLfoAmtNode.connect(vcf.frequency);
-  }
-
-  function applyPitchToOsc(midi){
-    if(!ctx) return;
+  function applyPitchToVoice(v, midi){
     const base = midiToFreq(midi);
     const bend = Math.pow(2, (pitchBend * bendSemis) / 12);
+    const detCents = +detune.value;
+    const det = Math.pow(2, detCents / 1200);
     const g = +glide.value;
 
-    // DCO freq
-    dcoOsc.frequency.setTargetAtTime(base*bend, now(), Math.max(0.001, g));
-    // Sub 1 octave below
-    subOsc.frequency.setTargetAtTime((base/2)*bend, now(), Math.max(0.001, g));
+    v.dcoOsc.frequency.setTargetAtTime(base * bend * det, now(), Math.max(0.001, g));
+    v.subOsc.frequency.setTargetAtTime((base/2) * bend * det, now(), Math.max(0.001, g));
   }
 
-  function envOn(midi){
-    if(!ctx) return;
+  function envOnVoice(v, midi, velocity01=1){
     const t = now();
+    v.busy = true;
+    v.midi = midi;
+    v.vel = velocity01;
+    v.startedAt = t;
+    v.releaseAt = 0;
 
-    // LFO delay envelope (ramps in after delay)
+    // LFO delay envelope per keypress (global lfoDelayGain just acts like global "fade-in")
+    // We'll implement per-note by resetting lfoDelayGain ramp on each key press (like Juno LFO delay behavior)
     lfoDelayGain.gain.cancelScheduledValues(t);
     lfoDelayGain.gain.setValueAtTime(0, t);
     lfoDelayGain.gain.linearRampToValueAtTime(1, t + (+lfoDelay.value));
 
-    // Amp envelope OR gate
-    ampGain.gain.cancelScheduledValues(t);
+    // Amp envelope or gate
+    v.vca.gain.cancelScheduledValues(t);
+    const velToAmp = +velAmt.value;
+    const ampPeak = clamp(1.0 - (1-velocity01)*velToAmp, 0.2, 1.0);
+
     if(vcaMode === "gate"){
-      ampGain.gain.setValueAtTime(1.0, t);
+      v.vca.gain.setValueAtTime(ampPeak, t);
     }else{
       const a=+A.value, d=+D.value, s=+S.value;
-      ampGain.gain.setValueAtTime(Math.max(ampGain.gain.value, 0.0001), t);
-      ampGain.gain.linearRampToValueAtTime(1.0, t + a);
-      ampGain.gain.linearRampToValueAtTime(s, t + a + d);
+      v.vca.gain.setValueAtTime(Math.max(v.vca.gain.value, 0.0001), t);
+      v.vca.gain.linearRampToValueAtTime(ampPeak, t + a);
+      v.vca.gain.linearRampToValueAtTime(ampPeak*s, t + a + d);
     }
 
     // Filter envelope
     const baseCut = +cut.value;
-    const env = +envAmt.value; // 0..1
+    const env = +envAmt.value;
     const k = +kfol.value;
+    const velToVcf = +velVcf.value;
+    const velBoost = 1 + (velocity01-1) * velToVcf; // if vel<1, negative effect
+    const velScale = clamp(velBoost, 0.6, 1.4);
 
     const keyTrack = baseCut * (Math.pow(2, (midi - 60)/12) - 1) * k;
-    const peak = Math.min(16000, baseCut + keyTrack + (baseCut * 3.4 * env));
-    const sustain = Math.min(16000, baseCut + keyTrack + (baseCut * 1.2 * env * (+S.value)));
+    const peak = Math.min(16000, (baseCut + keyTrack + (baseCut * 3.4 * env)) * velScale);
+    const sustain = Math.min(16000, (baseCut + keyTrack + (baseCut * 1.2 * env * (+S.value))) * velScale);
 
-    // Fast-ish Juno style: we reuse A/D for filter too (simple & musical)
     const fa = +A.value * 0.9;
     const fd = +D.value * 0.9;
 
-    vcf.frequency.cancelScheduledValues(t);
-    vcf.frequency.setValueAtTime(Math.max(80, baseCut + keyTrack), t);
-    vcf.frequency.linearRampToValueAtTime(peak, t + fa);
-    vcf.frequency.linearRampToValueAtTime(sustain, t + fa + fd);
+    v.vcf.frequency.cancelScheduledValues(t);
+    v.vcf.frequency.setValueAtTime(Math.max(80, baseCut + keyTrack), t);
+    v.vcf.frequency.linearRampToValueAtTime(peak, t + fa);
+    v.vcf.frequency.linearRampToValueAtTime(sustain, t + fa + fd);
 
-    // LFO to VCF depth
-    wireVcfLfoIfNeeded();
-    const lAmt = +lfoAmt.value;
-    const depthHz = (Math.max(80, baseCut) * 0.35) * lAmt;
-    vcfLfoAmtNode.gain.setTargetAtTime(depthHz, t, 0.02);
-
-    // PWM LFO depth is done in the animation loop (cheap)
+    // LFO depth to VCF updated in updateAllAudioParams()
+    applyPitchToVoice(v, midi);
   }
 
-  function envOff(){
+  function envOffVoice(v){
     if(!ctx) return;
     const t = now();
+    v.releaseAt = t;
 
     if(vcaMode === "gate"){
-      ampGain.gain.setValueAtTime(0.0001, t);
+      v.vca.gain.setValueAtTime(0.0001, t);
     }else{
       const r=+R.value;
-      ampGain.gain.cancelScheduledValues(t);
-      ampGain.gain.setValueAtTime(Math.max(ampGain.gain.value, 0.0001), t);
-      ampGain.gain.linearRampToValueAtTime(0.0001, t + r);
+      v.vca.gain.cancelScheduledValues(t);
+      v.vca.gain.setValueAtTime(Math.max(v.vca.gain.value, 0.0001), t);
+      v.vca.gain.linearRampToValueAtTime(0.0001, t + r);
     }
 
     // Filter release back to base cutoff
     const baseCut = +cut.value;
     const r=+R.value;
-    vcf.frequency.cancelScheduledValues(t);
-    vcf.frequency.setValueAtTime(vcf.frequency.value, t);
-    vcf.frequency.linearRampToValueAtTime(baseCut, t + Math.min(1.8, r));
+    v.vcf.frequency.cancelScheduledValues(t);
+    v.vcf.frequency.setValueAtTime(v.vcf.frequency.value, t);
+    v.vcf.frequency.linearRampToValueAtTime(baseCut, t + Math.min(1.8, r));
+
+    // Mark voice free after release time (simple timer)
+    const freeAfter = (vcaMode === "gate") ? 0.03 : (+R.value + 0.05);
+    setTimeout(()=>{
+      // only free if no new note has reused it
+      if(v.releaseAt === t){
+        v.busy = false;
+        v.midi = null;
+      }
+    }, Math.ceil(freeAfter*1000));
   }
 
-  function noteOn(midi){
+  function forceRelease(v, time=0.02){
+    if(!ctx) return;
+    const t = now();
+    v.vca.gain.cancelScheduledValues(t);
+    v.vca.gain.setValueAtTime(Math.max(v.vca.gain.value, 0.0001), t);
+    v.vca.gain.linearRampToValueAtTime(0.0001, t + time);
+    v.busy = false;
+    v.midi = null;
+  }
+
+  // ========= Playing logic (poly + arp) =========
+  function noteOn(midi, velocity01=1){
     ensureAudio();
     if(ctx.state==="suspended") ctx.resume();
+    updateAllAudioParams();
 
-    lastMidi=midi;
-    applyPitchToOsc(midi);
-    envOn(midi);
-    noteInfo.textContent = `MIDI ${midi} (${midiToFreq(midi).toFixed(1)} Hz)`;
-  }
-
-  function noteOff(){
-    if(held.size>0){
-      const last = Array.from(held.values()).at(-1);
-      lastMidi=last;
-      applyPitchToOsc(last);
-      envOn(last);
-      noteInfo.textContent = `MIDI ${last} (${midiToFreq(last).toFixed(1)} Hz)`;
+    if(arpEnabled){
+      // When arp is enabled, we DON'T directly play the pressed note;
+      // we just update the held set and arp will trigger steps.
+      updateArp();
+      noteInfo.textContent = `ARP HOLD (${[...held.values()].length} notes)`;
       return;
     }
-    envOff();
-    noteInfo.textContent="—";
+
+    const v = pickVoiceForNote(midi);
+    envOnVoice(v, midi, velocity01);
+    noteInfo.textContent = `MIDI ${midi} (${midiToFreq(midi).toFixed(1)} Hz) • voices ${maxVoices}`;
   }
 
-  function panic(){
+  function noteOff(midi){
+    if(!ctx) return;
+
+    if(arpEnabled){
+      updateArp();
+      noteInfo.textContent = held.size ? `ARP HOLD (${[...held.values()].length} notes)` : "—";
+      return;
+    }
+
+    // find voice playing this midi
+    const v = voices.find(v=>v.busy && v.midi===midi);
+    if(v) envOffVoice(v);
+    noteInfo.textContent = "—";
+  }
+
+  function panic(silent=false){
     if(!ctx) return;
     held.clear();
-    lastMidi=null;
-    pitchBend=0;
-    envOff();
-    ampGain.gain.setValueAtTime(0.0001, now());
-    noteInfo.textContent="—";
+    pitchBend = 0;
+    stopArp();
+
+    for(const v of voices){
+      forceRelease(v, 0.01);
+    }
+    if(!silent) noteInfo.textContent="—";
     refreshKeyHighlights();
   }
 
-  // ----- Scope -----
+  // ========= Arpeggiator =========
+  function getHeldNotesSorted(){
+    const notes = [...held.values()];
+    notes.sort((a,b)=>a-b);
+    return notes;
+  }
+
+  function updateArp(){
+    if(!arpEnabled){
+      stopArp();
+      return;
+    }
+    const n = held.size;
+    if(n===0){
+      stopArp();
+      return;
+    }
+    if(!arpTimer){
+      startArp();
+    }
+  }
+
+  function startArp(){
+    stopArp();
+    arpIndex = 0;
+    const stepMs = () => Math.max(25, 1000 / (+arpRate.value)); // rate is steps per second
+    arpTimer = setInterval(()=>arpStep(), stepMs());
+  }
+
+  function stopArp(){
+    if(arpTimer){
+      clearInterval(arpTimer);
+      arpTimer = 0;
+    }
+    // release last arp voice if any
+    if(arpLastVoice){
+      envOffVoice(arpLastVoice);
+      arpLastVoice = null;
+    }
+  }
+
+  function arpStep(){
+    if(!ctx) return;
+    const notes = getHeldNotesSorted();
+    if(notes.length===0) return;
+
+    // expand across octaves
+    const octs = (+arpOct.value|0);
+    const expanded = [];
+    for(let o=0;o<octs;o++){
+      for(const m of notes) expanded.push(m + o*12);
+    }
+
+    let chosen;
+    if(arpMode==="rand"){
+      chosen = expanded[Math.floor(Math.random()*expanded.length)];
+    }else if(arpMode==="down"){
+      chosen = expanded[(expanded.length - 1 - (arpIndex % expanded.length))];
+    }else{
+      chosen = expanded[(arpIndex % expanded.length)];
+    }
+    arpIndex++;
+
+    // Trigger note on one voice (poly arp uses voices as needed)
+    updateAllAudioParams();
+    const v = pickVoiceForNote(chosen);
+    const vel = 1; // no real velocity from touch, keep 1
+    envOnVoice(v, chosen, vel);
+    arpLastVoice = v;
+
+    // gate length
+    const gate = +arpGate.value; // 0.1..0.95
+    const stepDur = 1 / (+arpRate.value); // seconds
+    setTimeout(()=>{
+      // only release if this voice still corresponds to arpLastVoice and still has same midi
+      if(v && v.busy && v.midi === chosen){
+        envOffVoice(v);
+      }
+    }, Math.max(10, Math.floor(stepDur * gate * 1000)));
+
+    noteInfo.textContent = `ARP ${arpMode.toUpperCase()} • MIDI ${chosen}`;
+  }
+
+  // ========= Scope =========
+  const scopeCanvas = $("scope");
+  const sctx = scopeCanvas.getContext("2d");
   function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
   function startScope(){
     if(!analyser) return;
     cancelAnimationFrame(scopeRAF);
@@ -948,15 +1292,14 @@
       const accent = cssVar("--accent");
       const muted = cssVar("--muted");
 
-      // grid
       sctx.globalAlpha=1;
       sctx.strokeStyle=stroke;
       sctx.lineWidth=1;
       for(let i=1;i<5;i++){
-        const y=(h*i)/5; sctx.beginPath(); sctx.moveTo(0,y); sctx.lineTo(w,y); sctx.stroke();
+        const y=(h*i)/5;
+        sctx.beginPath(); sctx.moveTo(0,y); sctx.lineTo(w,y); sctx.stroke();
       }
 
-      // waveform
       sctx.strokeStyle=accent;
       sctx.lineWidth=2;
       sctx.beginPath();
@@ -969,106 +1312,34 @@
       }
       sctx.stroke();
 
-      // center
       sctx.strokeStyle=muted;
       sctx.globalAlpha=0.28;
       sctx.beginPath(); sctx.moveTo(0,mid); sctx.lineTo(w,mid); sctx.stroke();
       sctx.globalAlpha=1;
 
-      // PWM LFO: modulate duty each frame (cheap + works on iOS)
+      // PWM LFO (light): if pulse enabled, modulate duty a bit by LFO each few frames
+      // We'll update the PWM curve used by each voice.
       if(ctx && onPulse){
         const baseDuty = +pwm.value;
         const depth = +pwmLfo.value;
-        const lfo = Math.sin(2*Math.PI*(+lfoRate.value)*ctx.currentTime);
-        const d = clamp(baseDuty + (lfo*0.45*depth), 0.02, 0.98);
-        // Update shaper threshold by updating curve occasionally
-        // To keep it light: only every ~4 frames
+        const l = Math.sin(2*Math.PI*(+lfoRate.value)*ctx.currentTime);
+        const d = clamp(baseDuty + (l*0.45*depth), 0.02, 0.98);
+
+        // update UI value + voice curves occasionally
         if((Math.floor(ctx.currentTime*60) % 4)===0){
           pwm.value = String(d);
-          updatePwmShaper();
-          pwmv.textContent=(+pwm.value).toFixed(2);
+          setDisplays();
+          if(ctx){
+            const curve = makePulseShaperCurve(+pwm.value);
+            for(const v of voices) v.pulseShaper.curve = curve;
+          }
         }
       }
     };
     draw();
   }
 
-  // ----- UI wiring -----
-  function bindInputs(){
-    [
-      pwm,pwmLfo,dcoLvl,cut,res,envAmt,lfoAmt,kfol,lfoRate,lfoDelay,glide,master,A,D,S,R
-    ].forEach(el=>{
-      el.addEventListener("input", ()=>{
-        setDisplays();
-        if(!ctx) return;
-        if(el===pwm) updatePwmShaper();
-        if(el===master) masterGain.gain.setTargetAtTime(+master.value, now(), 0.01);
-        if(el===res) vcf.Q.setTargetAtTime(+res.value, now(), 0.01);
-        if(el===lfoRate) lfoOsc.frequency.setTargetAtTime(+lfoRate.value, now(), 0.01);
-
-        if(lastMidi!=null){
-          // Update pitch glide target if needed
-          applyPitchToOsc(lastMidi);
-        }
-      });
-    });
-
-    function toggleSource(which){
-      if(which==="saw"){ onSaw=!onSaw; togglePill(swSaw,onSaw); }
-      if(which==="pulse"){ onPulse=!onPulse; togglePill(swPulse,onPulse); }
-      if(which==="sub"){ onSub=!onSub; togglePill(swSub,onSub); if(subGain && ctx) subGain.gain.setTargetAtTime(onSub?0.35:0, now(), 0.01); }
-      if(which==="noise"){ onNoise=!onNoise; togglePill(swNoise,onNoise); if(noiseGain && ctx) noiseGain.gain.setTargetAtTime(onNoise?0.18:0, now(), 0.01); }
-      // Update DCO mix gains only if ctx exists:
-      if(ctx){
-        // We used internal gains; easiest is to rebuild by setting overall dcoLvl and letting saw/pulse presence be "audible" via their branches.
-        // For compactness we accept that saw/pulse levels are managed in ensureAudio initial values; toggling after start would require storing those nodes.
-        // Quick workaround: if you want toggles live, reload page or start audio after selecting.
-      }
-    }
-
-    swSaw.addEventListener("click", ()=>toggleSource("saw"));
-    swPulse.addEventListener("click", ()=>toggleSource("pulse"));
-    swSub.addEventListener("click", ()=>toggleSource("sub"));
-    swNoise.addEventListener("click", ()=>toggleSource("noise"));
-
-    document.querySelectorAll("[data-hpf]").forEach(el=>{
-      el.addEventListener("click", ()=>{
-        ensureAudio();
-        setHPF(+el.dataset.hpf);
-      });
-    });
-
-    document.querySelectorAll("[data-cho]").forEach(el=>{
-      el.addEventListener("click", ()=>{
-        ensureAudio();
-        setChorus(+el.dataset.cho);
-      });
-    });
-
-    document.querySelectorAll("[data-vca]").forEach(el=>{
-      el.addEventListener("click", ()=>{
-        setVCA(el.dataset.vca);
-      });
-    });
-
-    audioBtn.addEventListener("click", async ()=>{
-      ensureAudio();
-      if(ctx.state==="suspended") await ctx.resume();
-      // Apply initial hpf/chorus selections
-      setHPF(hpfStep);
-      setChorus(chorusMode);
-      statusEl.textContent = `Audio ON (${ctx.sampleRate} Hz)`;
-      audioBtn.classList.add("on");
-    });
-
-    panicBtn.addEventListener("click", ()=>{
-      ensureAudio();
-      panic();
-      statusEl.textContent = "Panic (notes off)";
-    });
-  }
-
-  // ----- Touch keyboard -----
+  // ========= Keyboard (touch + PC) =========
   const keyboardEl = $("keyboard");
   const startMidi = 48; // C3
   const octaves = 2;
@@ -1121,7 +1392,7 @@
       active=true;
       el.setPointerCapture(e.pointerId);
       held.set(keyId,midi);
-      noteOn(midi);
+      noteOn(midi, 1);
       refreshKeyHighlights();
     });
 
@@ -1130,7 +1401,7 @@
       if(!active) return;
       active=false;
       held.delete(keyId);
-      noteOff();
+      noteOff(midi);
       refreshKeyHighlights();
     });
 
@@ -1138,7 +1409,7 @@
       if(!active) return;
       active=false;
       held.delete(keyId);
-      noteOff();
+      noteOff(midi);
       refreshKeyHighlights();
     });
 
@@ -1146,7 +1417,7 @@
       if(!active) return;
       active=false;
       held.delete(keyId);
-      noteOff();
+      noteOff(midi);
       refreshKeyHighlights();
     });
   }
@@ -1158,7 +1429,7 @@
 
   buildKeyboard();
 
-  // ----- PC keyboard mapping -----
+  // PC keyboard mapping
   const baseMidi=60; // C4
   const keyMap = new Map([
     ["KeyZ",0],["KeyS",1],["KeyX",2],["KeyD",3],["KeyC",4],
@@ -1166,7 +1437,6 @@
     ["KeyJ",10],["Comma",11]
   ]);
   const downCodes=new Set();
-
   function codeToMidi(code){
     if(!keyMap.has(code)) return null;
     return baseMidi + keyMap.get(code) + octave*12;
@@ -1178,38 +1448,123 @@
     if(e.code==="KeyQ"){ octave=Math.max(-2,octave-1); statusEl.textContent=`Octave ${octave}`; return; }
     if(e.code==="KeyW"){ octave=Math.min(2,octave+1); statusEl.textContent=`Octave ${octave}`; return; }
 
-    if(e.code==="ArrowLeft"){ pitchBend=Math.max(-1,pitchBend-0.2); if(lastMidi!=null) applyPitchToOsc(lastMidi); return; }
-    if(e.code==="ArrowRight"){ pitchBend=Math.min(1,pitchBend+0.2); if(lastMidi!=null) applyPitchToOsc(lastMidi); return; }
-    if(e.code==="ArrowDown"){ pitchBend=0; if(lastMidi!=null) applyPitchToOsc(lastMidi); return; }
+    if(e.code==="ArrowLeft"){ pitchBend=Math.max(-1,pitchBend-0.2); return; }
+    if(e.code==="ArrowRight"){ pitchBend=Math.min(1,pitchBend+0.2); return; }
+    if(e.code==="ArrowDown"){ pitchBend=0; return; }
 
     const midi=codeToMidi(e.code);
     if(midi==null) return;
 
     downCodes.add(e.code);
     held.set(e.code,midi);
-    noteOn(midi);
+    noteOn(midi, 1);
     refreshKeyHighlights();
   });
 
   window.addEventListener("keyup",(e)=>{
     if(downCodes.has(e.code)){
       downCodes.delete(e.code);
+      const midi = held.get(e.code);
       held.delete(e.code);
-      noteOff();
+      if(midi!=null) noteOff(midi);
       refreshKeyHighlights();
     }
   });
 
-  // Init
-  bindInputs();
-  // default switch states
-  togglePill(swSaw, onSaw);
-  togglePill(swPulse, onPulse);
-  togglePill(swSub, onSub);
-  togglePill(swNoise, onNoise);
-  setHPF(0);
-  setChorus(0);
-  setVCA("env");
+  // ========= UI wiring =========
+  function wireUI(){
+    // knobs
+    document.querySelectorAll(".knob").forEach(k=>{
+      const id = k.dataset.for;
+      const r = $(id);
+      if(!r) return;
+      attachKnob(k, r, () => {
+        setDisplays();
+        updateAllAudioParams();
+        if(arpEnabled && (id==="arpRate")){ startArp(); } // refresh timer
+      });
+    });
+
+    // toggles
+    swSaw.addEventListener("click",()=>{ onSaw=!onSaw; togglePill(swSaw,onSaw); updateAllAudioParams(); });
+    swPulse.addEventListener("click",()=>{ onPulse=!onPulse; togglePill(swPulse,onPulse); updateAllAudioParams(); });
+    swSub.addEventListener("click",()=>{ onSub=!onSub; togglePill(swSub,onSub); updateAllAudioParams(); });
+    swNoise.addEventListener("click",()=>{ onNoise=!onNoise; togglePill(swNoise,onNoise); updateAllAudioParams(); });
+
+    document.querySelectorAll("[data-hpf]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        ensureAudio();
+        setHPF(+el.dataset.hpf);
+      });
+    });
+
+    document.querySelectorAll("[data-cho]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        ensureAudio();
+        setChorus(+el.dataset.cho);
+      });
+    });
+
+    document.querySelectorAll("[data-vca]").forEach(el=>{
+      el.addEventListener("click",()=> setVCA(el.dataset.vca));
+    });
+
+    document.querySelectorAll("[data-voices]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        ensureAudio();
+        setVoices(+el.dataset.voices);
+      });
+    });
+
+    document.querySelectorAll("[data-arpmode]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        arpMode = el.dataset.arpmode;
+        document.querySelectorAll("[data-arpmode]").forEach(x=>togglePill(x, x.dataset.arpmode===arpMode));
+        setDisplays();
+      });
+    });
+
+    arpOnBtn.addEventListener("click",()=>{
+      arpEnabled = true;
+      togglePill(arpOnBtn,true);
+      togglePill(arpOffBtn,false);
+      setDisplays();
+      updateArp();
+    });
+    arpOffBtn.addEventListener("click",()=>{
+      arpEnabled = false;
+      togglePill(arpOnBtn,false);
+      togglePill(arpOffBtn,true);
+      stopArp();
+      setDisplays();
+      noteInfo.textContent="—";
+    });
+
+    // audio
+    audioBtn.addEventListener("click", async ()=>{
+      ensureAudio();
+      if(ctx.state==="suspended") await ctx.resume();
+      statusEl.textContent = `Audio ON (${ctx.sampleRate} Hz) • voices ${maxVoices}`;
+      audioBtn.classList.add("on");
+      updateAllAudioParams();
+    });
+
+    panicBtn.addEventListener("click", ()=>{
+      ensureAudio();
+      panic();
+      statusEl.textContent = "Panic (notes off)";
+    });
+  }
+
+  // init UI states
+  togglePill(swSaw,onSaw);
+  togglePill(swPulse,onPulse);
+  togglePill(swSub,onSub);
+  togglePill(swNoise,onNoise);
+  document.querySelectorAll("[data-arpmode]").forEach(x=>togglePill(x, x.dataset.arpmode===arpMode));
+  wireUI();
+  setVoices(maxVoices);
+  setDisplays();
 })();
 </script>
 </body>
