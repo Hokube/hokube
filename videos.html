@@ -7,10 +7,47 @@
 
 <style>
   :root{
+    /* Let form controls follow theme */
+    color-scheme: light dark;
+
+    /* Theme tokens (light default) */
     --bg:#fff;
     --fg:#111;
     --muted:#666;
     --border:#111;
+
+    --stage-bg:#fff;
+    --fade:#fff;
+
+    --btn-hover: .7;
+  }
+
+  /* Dark theme when forced */
+  :root[data-theme="dark"]{
+    --bg:#0b0f17;
+    --fg:#e5e7eb;
+    --muted:#a6adbb;
+    --border:#2a3548;
+
+    --stage-bg:#111827;
+    --fade:#0b0f17;
+
+    --btn-hover: .82;
+  }
+
+  /* Auto dark if user prefers dark AND no explicit theme stored */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme]){
+      --bg:#0b0f17;
+      --fg:#e5e7eb;
+      --muted:#a6adbb;
+      --border:#2a3548;
+
+      --stage-bg:#111827;
+      --fade:#0b0f17;
+
+      --btn-hover: .82;
+    }
   }
 
   body{
@@ -59,6 +96,13 @@
     text-transform:uppercase;
   }
 
+  /* Right side controls */
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+
   /* Dé */
   .dice-btn{
     all:unset;
@@ -68,7 +112,7 @@
     gap:10px;
     user-select:none;
   }
-  .dice-btn:hover{ opacity:.7; }
+  .dice-btn:hover{ opacity:var(--btn-hover); }
   .dice-btn:focus-visible{
     outline:2px solid var(--fg);
     outline-offset:4px;
@@ -98,12 +142,35 @@
     text-transform:uppercase;
   }
 
+  /* Theme toggle button */
+  .theme-btn{
+    all:unset;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;
+    height:34px;
+    border:1.5px solid var(--border);
+    border-radius:999px;
+    user-select:none;
+  }
+  .theme-btn:hover{ opacity:var(--btn-hover); }
+  .theme-btn:focus-visible{
+    outline:2px solid var(--fg);
+    outline-offset:4px;
+  }
+  .theme-icon{
+    font-size:14px;
+    line-height:1;
+  }
+
   /* Zone “projection” */
   .stage{
     position:relative;
     width:100%;
     border:1.5px solid var(--border);
-    background:#fff;
+    background:var(--stage-bg);
     /* aspect ratio façon “écran” */
     aspect-ratio:16/9;
     overflow:hidden;
@@ -115,11 +182,11 @@
     display:block;
   }
 
-  /* Fade blanc */
+  /* Fade */
   .fade{
     position:absolute;
     inset:0;
-    background:#fff;
+    background:var(--fade);
     pointer-events:none;
     opacity:0;
     transition: opacity 360ms ease;
@@ -155,10 +222,11 @@
     border-bottom:1px solid var(--fg);
     padding-bottom:2px;
   }
-  .back a:hover{ opacity:.7; }
+  .back a:hover{ opacity:var(--btn-hover); }
 
   @media (max-width:520px){
     .top{ flex-direction:column; align-items:flex-start; }
+    .controls{ width:100%; justify-content:space-between; }
     .meta{ flex-direction:column; align-items:flex-start; }
   }
 </style>
@@ -173,19 +241,25 @@
           <div class="subtitle">Roll the dice to change the projection</div>
         </div>
 
-        <button class="dice-btn" id="roll" aria-label="Changer de clip">
-          <span class="dice-wrap" id="diceWrap" aria-hidden="true">
-            <svg class="dice" viewBox="0 0 64 64">
-              <rect x="8" y="8" width="48" height="48" rx="10" fill="#111"/>
-              <circle cx="22" cy="22" r="4" fill="#fff"/>
-              <circle cx="42" cy="42" r="4" fill="#fff"/>
-              <circle cx="42" cy="22" r="4" fill="#fff"/>
-              <circle cx="22" cy="42" r="4" fill="#fff"/>
-              <circle cx="32" cy="32" r="4" fill="#fff"/>
-            </svg>
-          </span>
-          <span class="btn-text">Roll</span>
-        </button>
+        <div class="controls">
+          <button class="theme-btn" id="themeToggle" type="button" aria-label="Basculer le thème">
+            <span class="theme-icon" id="themeIcon" aria-hidden="true">🌙</span>
+          </button>
+
+          <button class="dice-btn" id="roll" aria-label="Changer de clip">
+            <span class="dice-wrap" id="diceWrap" aria-hidden="true">
+              <svg class="dice" viewBox="0 0 64 64">
+                <rect x="8" y="8" width="48" height="48" rx="10" fill="var(--fg)"/>
+                <circle cx="22" cy="22" r="4" fill="var(--bg)"/>
+                <circle cx="42" cy="42" r="4" fill="var(--bg)"/>
+                <circle cx="42" cy="22" r="4" fill="var(--bg)"/>
+                <circle cx="22" cy="42" r="4" fill="var(--bg)"/>
+                <circle cx="32" cy="32" r="4" fill="var(--bg)"/>
+              </svg>
+            </span>
+            <span class="btn-text">Roll</span>
+          </button>
+        </div>
       </div>
 
       <div class="stage" aria-label="Lecteur vidéo">
@@ -214,7 +288,8 @@
     "q3g5W9dqEaA",
     "c5LyOyADyDI",
     "Gg8djFRQr_M",
-    "uvHZdRrup5E"
+    "uvHZdRrup5E",
+    "ghdP_nRhfd4"
   ];
 
   const player   = document.getElementById("player");
@@ -223,6 +298,57 @@
   const statusEl = document.getElementById("status");
   const openOnYt = document.getElementById("openOnYt");
   const fadeEl   = document.getElementById("fade");
+
+  // Theme toggle
+  const themeToggle = document.getElementById("themeToggle");
+  const themeIcon   = document.getElementById("themeIcon");
+  const THEME_KEY   = "hokube-theme"; // "light" | "dark"
+
+  function getSystemTheme(){
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
+
+  function getEffectiveTheme(){
+    const forced = document.documentElement.getAttribute("data-theme");
+    return forced || getSystemTheme();
+  }
+
+  function applyTheme(theme){ // "light" | "dark" | null
+    const root = document.documentElement;
+    if (!theme) root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", theme);
+
+    const effective = getEffectiveTheme();
+    if (themeIcon) themeIcon.textContent = (effective === "dark") ? "☀️" : "🌙";
+  }
+
+  // Init theme from localStorage if present
+  (function initTheme(){
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") applyTheme(saved);
+    else applyTheme(null);
+
+    // If no saved theme, update icon when OS theme changes
+    if (!saved && window.matchMedia){
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const handler = () => applyTheme(null);
+      if (mq.addEventListener) mq.addEventListener("change", handler);
+      else mq.addListener(handler);
+    }
+  })();
+
+  if (themeToggle){
+    themeToggle.addEventListener("click", () => {
+      const root = document.documentElement;
+      const current = root.getAttribute("data-theme"); // forced theme or null
+      const next = (getEffectiveTheme() === "dark") ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+  }
 
   let lastIndex = -1;
   let isRolling = false;
@@ -258,17 +384,17 @@
     void diceWrap.offsetWidth;
     diceWrap.classList.add("rolling");
 
-    // Fade to white
+    // Fade
     fadeEl.classList.add("show");
 
-    // Laisse le blanc monter avant de changer la vidéo
+    // Laisse le fade monter avant de changer la vidéo
     await new Promise(r => setTimeout(r, 220));
 
     lastIndex = i;
     setEmbed(CLIPS[i], autoplay);
     updateStatus(i);
 
-    // Laisse un poil le blanc, puis fade out
+    // Laisse un poil le fade, puis fade out
     await new Promise(r => setTimeout(r, 160));
     fadeEl.classList.remove("show");
 
