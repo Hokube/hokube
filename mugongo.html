@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mugongo — Arc Musical du Gabon</title>
+<title>Hokube Triple Mugongo Room</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;1,300&display=swap');
 
@@ -193,8 +193,8 @@
 <body>
 
 <header>
-  <h1>MUGONGO</h1>
-  <p>Arc musical · Gabon</p>
+  <h1>HOKUBE</h1>
+  <p>Triple Mugongo Room · Gabon</p>
 </header>
 
 <div class="stage" id="stage"></div>
@@ -202,61 +202,185 @@
 <footer>Appuie sur <em>F · G · H</em> au clavier — ou touche les arcs</footer>
 
 <script>
-// ── Audio Engine: Karplus-Strong string synthesis ──────────────────────────
+// ── Audio Engine: Mugongo-authentic synthesis ─────────────────────────────
+// Combines: Karplus-Strong + buzz oscillator + hollow body formant + reverb
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let actx = null;
+let reverbNode = null;
 
 function getCtx() {
-  if (!actx) actx = new AudioContext();
+  if (!actx) {
+    actx = new AudioContext();
+    buildReverb();
+  }
   if (actx.state === 'suspended') actx.resume();
   return actx;
 }
 
-function pluckString(freq, resonance = 0.985) {
-  const ctx = getCtx();
-  const sampleRate = ctx.sampleRate;
+// ── Impulse reverb: simulate a wooden hollow room ────────────────────────
+function buildReverb() {
+  const ctx = actx;
+  const len = ctx.sampleRate * 1.8;
+  const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      // Exponential decay + early reflections spike
+      const t = i / ctx.sampleRate;
+      const earlyRef = i < 800 ? (Math.random() * 2 - 1) * 0.6 * Math.exp(-i / 120) : 0;
+      d[i] = (Math.random() * 2 - 1) * Math.exp(-t * 3.5) * 0.4 + earlyRef;
+    }
+  }
+  reverbNode = ctx.createConvolver();
+  reverbNode.buffer = ir;
+  reverbNode.connect(ctx.destination);
+}
+
+// ── Karplus-Strong with inharmonic "dirty" pluck ──────────────────────────
+function makeKSBuffer(freq, sampleRate) {
   const bufLen = Math.round(sampleRate / freq);
-
-  // Fill noise buffer
-  const buf = new Float32Array(bufLen);
-  for (let i = 0; i < bufLen; i++) buf[i] = Math.random() * 2 - 1;
-
-  // Body resonance warmth — low-pass the initial noise slightly
-  for (let i = 1; i < bufLen; i++) buf[i] = (buf[i] + buf[i-1]) * 0.5;
-
-  // Create AudioBuffer
-  const audioBuf = ctx.createBuffer(1, sampleRate * 3, sampleRate);
+  const duration = sampleRate * 2.5;
+  const audioBuf = actx.createBuffer(1, duration, sampleRate);
   const data = audioBuf.getChannelData(0);
 
-  // Karplus-Strong: delay line feedback
-  const delay = new Float32Array(bufLen);
-  for (let i = 0; i < bufLen; i++) delay[i] = buf[i];
-
-  for (let i = 0; i < data.length; i++) {
-    const idx = i % bufLen;
-    data[i] = delay[idx];
-    delay[idx] = resonance * (delay[idx] + delay[(idx + 1) % bufLen]) * 0.5;
+  // Seed: mix of noise + low sine for body thump
+  const seed = new Float32Array(bufLen);
+  for (let i = 0; i < bufLen; i++) {
+    seed[i] = (Math.random() * 2 - 1) * 0.7 +
+               Math.sin(2 * Math.PI * i / bufLen) * 0.3; // adds fundamental
   }
+  // One pass of light low-pass on seed (warm the pluck)
+  for (let i = 1; i < bufLen; i++) seed[i] = seed[i] * 0.6 + seed[i-1] * 0.4;
 
-  const src = ctx.createBufferSource();
-  src.buffer = audioBuf;
+  const delay = new Float32Array(bufLen);
+  for (let i = 0; i < bufLen; i++) delay[i] = seed[i];
 
-  // Warm the tone: gentle low-pass
-  const lp = ctx.createBiquadFilter();
-  lp.type = 'lowpass';
-  lp.frequency.value = freq * 6;
-  lp.Q.value = 0.8;
+  // KS with slightly detuned averaging (adds inharmonicity / buzz feel)
+  const blend = 0.497; // < 0.5 => slightly stretched tuning, more metallic
+  for (let i = 0; i < duration; i++) {
+    const idx = i % bufLen;
+    const next = (idx + 1) % bufLen;
+    data[i] = delay[idx];
+    delay[idx] = 0.9885 * (delay[idx] * (1 - blend) + delay[next] * blend);
+  }
+  return audioBuf;
+}
 
-  // Slight reverb via a convolver-free approach: two comb delays
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.7, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.8);
+function pluckString(freq) {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
 
-  src.connect(lp);
-  lp.connect(gain);
-  gain.connect(ctx.destination);
-  src.start();
-  src.stop(ctx.currentTime + 3);
+  // ── 1. MAIN KS STRING ────────────────────────────────────────────────
+  const ksBuf = makeKSBuffer(freq, ctx.sampleRate);
+  const ksSrc = ctx.createBufferSource();
+  ksSrc.buffer = ksBuf;
+
+  // Formant filter: hollow body cavity (peak around 300-600 Hz like a gourd)
+  const formant = ctx.createBiquadFilter();
+  formant.type = 'peaking';
+  formant.frequency.value = 380;
+  formant.Q.value = 1.8;
+  formant.gain.value = 9; // boost the "body" hollow resonance
+
+  // Nasal mid boost (mugongo characteristic twang)
+  const nasal = ctx.createBiquadFilter();
+  nasal.type = 'peaking';
+  nasal.frequency.value = freq * 2.5;
+  nasal.Q.value = 3;
+  nasal.gain.value = 6;
+
+  // High cut (wood is not bright)
+  const hiCut = ctx.createBiquadFilter();
+  hiCut.type = 'lowpass';
+  hiCut.frequency.value = 3200;
+  hiCut.Q.value = 0.6;
+
+  const ksGain = ctx.createGain();
+  ksGain.gain.setValueAtTime(0.75, now);
+  ksGain.gain.exponentialRampToValueAtTime(0.001, now + 2.4);
+
+  ksSrc.connect(formant);
+  formant.connect(nasal);
+  nasal.connect(hiCut);
+  hiCut.connect(ksGain);
+  ksGain.connect(ctx.destination);
+  ksGain.connect(reverbNode); // send to reverb too
+
+  // ── 2. BUZZ LAYER: sympathetic membrane rattle ───────────────────────
+  // A real mugongo often has a buzzing membrane (spider-egg silk, etc.)
+  const buzzOsc = ctx.createOscillator();
+  buzzOsc.type = 'sawtooth'; // harmonically rich
+  buzzOsc.frequency.value = freq * 1.003; // tiny detune = beating buzz
+
+  // AM modulate the buzz at low rate (flutter)
+  const amOsc = ctx.createOscillator();
+  amOsc.frequency.value = 7; // 7 Hz flutter
+  const amGain = ctx.createGain();
+  amGain.gain.value = 0.4;
+  amOsc.connect(amGain);
+
+  const buzzMod = ctx.createGain();
+  buzzMod.gain.value = 0; // base
+  amGain.connect(buzzMod.gain); // modulate
+
+  const buzzShape = ctx.createWaveShaper();
+  // Soft clip: keep buzz gritty but not harsh
+  const curve = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const x = (i * 2) / 256 - 1;
+    curve[i] = (Math.PI + 8) * x / (Math.PI + 8 * Math.abs(x));
+  }
+  buzzShape.curve = curve;
+
+  const buzzGain = ctx.createGain();
+  buzzGain.gain.setValueAtTime(0.09, now);
+  buzzGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9); // buzz fades fast
+
+  // Narrow band-pass centred on fundamental (buzz should be tonal)
+  const buzzBP = ctx.createBiquadFilter();
+  buzzBP.type = 'bandpass';
+  buzzBP.frequency.value = freq;
+  buzzBP.Q.value = 8;
+
+  buzzOsc.connect(buzzMod);
+  buzzMod.connect(buzzShape);
+  buzzShape.connect(buzzBP);
+  buzzBP.connect(buzzGain);
+  buzzGain.connect(ctx.destination);
+
+  // ── 3. PERCUSSIVE BODY THUMP (the wood knock on pluck) ───────────────
+  const thumpBuf = ctx.createBuffer(1, ctx.sampleRate * 0.18, ctx.sampleRate);
+  const td = thumpBuf.getChannelData(0);
+  for (let i = 0; i < td.length; i++) {
+    const t = i / ctx.sampleRate;
+    // Low freq thud + white noise burst
+    td[i] = Math.sin(2 * Math.PI * 90 * t) * Math.exp(-t * 40) * 0.5 +
+             (Math.random() * 2 - 1) * Math.exp(-t * 60) * 0.3;
+  }
+  const thumpSrc = ctx.createBufferSource();
+  thumpSrc.buffer = thumpBuf;
+
+  const thumpLP = ctx.createBiquadFilter();
+  thumpLP.type = 'lowpass';
+  thumpLP.frequency.value = 350;
+
+  const thumpGain = ctx.createGain();
+  thumpGain.gain.setValueAtTime(0.35, now);
+
+  thumpSrc.connect(thumpLP);
+  thumpLP.connect(thumpGain);
+  thumpGain.connect(ctx.destination);
+  thumpGain.connect(reverbNode);
+
+  // ── START ALL ─────────────────────────────────────────────────────────
+  ksSrc.start(now);
+  ksSrc.stop(now + 2.5);
+  buzzOsc.start(now);
+  buzzOsc.stop(now + 1.0);
+  amOsc.start(now);
+  amOsc.stop(now + 1.0);
+  thumpSrc.start(now);
+  thumpSrc.stop(now + 0.2);
 }
 
 // ── Notes: D pentatonic — D4, F#4, A4 (3 arcs) ────────────────────────────
