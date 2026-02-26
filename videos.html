@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Random Clips</title>
+
+<style>
+  body {
+    margin: 0;
+    background: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .container {
+    width: min(900px, 92vw);
+    text-align: center;
+  }
+
+  .dice-btn {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+
+  .dice-btn:hover {
+    opacity: 0.6;
+  }
+
+  .frame {
+    width: 100%;
+    aspect-ratio: 16/9;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .caption {
+    margin-top: 15px;
+    font-size: 13px;
+    color: #777;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <button class="dice-btn" id="roll">
+    <svg width="38" height="38" viewBox="0 0 64 64">
+      <rect x="8" y="8" width="48" height="48" rx="12" fill="black"/>
+      <circle cx="22" cy="22" r="4" fill="white"/>
+      <circle cx="42" cy="42" r="4" fill="white"/>
+      <circle cx="42" cy="22" r="4" fill="white"/>
+      <circle cx="22" cy="42" r="4" fill="white"/>
+      <circle cx="32" cy="32" r="4" fill="white"/>
+    </svg>
+  </button>
+
+  <div class="frame">
+    <iframe id="player"
+      allow="autoplay; encrypted-media; picture-in-picture"
+      allowfullscreen
+      referrerpolicy="origin-when-cross-origin">
+    </iframe>
+  </div>
+
+  <div class="caption">Click the dice to explore</div>
+
+</div>
+
+<script>
+const CLIPS = [
+  "UBshPLW2OCU",
+  "APZLi6KSqnY",
+  "q3g5W9dqEaA",
+  "c5LyOyADyDI",
+  "Gg8djFRQr_M",
+  "uvHZdRrup5E"
+];
+
+const player = document.getElementById("player");
+const rollBtn = document.getElementById("roll");
+
+let lastIndex = -1;
+
+function pickRandom() {
+  if (CLIPS.length <= 1) return 0;
+  let i;
+  do {
+    i = Math.floor(Math.random() * CLIPS.length);
+  } while (i === lastIndex);
+  return i;
+}
+
+function loadClip(index, autoplay) {
+  lastIndex = index;
+  const ap = autoplay ? 1 : 0;
+  player.src =
+    `https://www.youtube-nocookie.com/embed/${CLIPS[index]}?autoplay=${ap}&rel=0`;
+}
+
+rollBtn.addEventListener("click", () => {
+  const i = pickRandom();
+  loadClip(i, true);
+});
+
+// premier clip au hasard sans autoplay
+loadClip(Math.floor(Math.random() * CLIPS.length), false);
+</script>
+
+</body>
+</html>
