@@ -1051,6 +1051,124 @@ function restartIntervalIfPlaying(){
 bpmEl.addEventListener("change", restartIntervalIfPlaying);
 swingEl.addEventListener("change", () => { /* swing n'a pas besoin de reset interval */ });
 </script>
+<script>
+/* =========================================================
+   HOKUBE hover sound (museum tick) + haptic feedback
+   ========================================================= */
 
+/** --- HAPTIC (Android / compatibles) --- */
+function hapticPulse(kind = "light") {
+  if (!("vibrate" in navigator)) return;
+  // Respecte "prefers-reduced-motion" (souvent lié au confort)
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const pattern = {
+    light: 10,
+    medium: 18,
+    strong: 28,
+    tick: [8] // un petit "tap"
+  }[kind] ?? 10;
+
+  navigator.vibrate(pattern);
+}
+
+/** --- Minimal sound (WebAudio) --- */
+let uiAudio = null;
+let uiMaster = null;
+let lastUiTick = 0;
+
+function ensureUiAudio() {
+  if (uiAudio) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  uiAudio = new AC();
+  uiMaster = uiAudio.createGain();
+  uiMaster.gain.value = 0.12; // volume global très discret
+  uiMaster.connect(uiAudio.destination);
+}
+
+async function resumeUiAudioIfNeeded() {
+  if (!uiAudio) return;
+  if (uiAudio.state === "suspended") {
+    try { await uiAudio.resume(); } catch(e){}
+  }
+}
+
+/**
+ * Tick “musée” : petite sinusoïde + filtre + enveloppe très courte.
+ * (Pas agressif, pas "clicky", très élégant)
+ */
+function playMuseumTick() {
+  const nowMs = performance.now();
+  if (nowMs - lastUiTick < 140) return; // anti-spam
+  lastUiTick = nowMs;
+
+  ensureUiAudio();
+  resumeUiAudioIfNeeded();
+
+  const t0 = uiAudio.currentTime;
+
+  const osc = uiAudio.createOscillator();
+  osc.type = "sine";
+  // légère variation pour éviter la répétition "robot"
+  const base = 880; // A5-ish
+  const jitter = (Math.random() * 18) - 9;
+  osc.frequency.setValueAtTime(base + jitter, t0);
+
+  const filt = uiAudio.createBiquadFilter();
+  filt.type = "lowpass";
+  filt.frequency.setValueAtTime(1400, t0);
+  filt.Q.setValueAtTime(0.7, t0);
+
+  const g = uiAudio.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(1.0, t0 + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.07);
+
+  // petite “air” très douce via high-shelf (optionnel mais joli)
+  const shelf = uiAudio.createBiquadFilter();
+  shelf.type = "highshelf";
+  shelf.frequency.setValueAtTime(3000, t0);
+  shelf.gain.setValueAtTime(-6, t0);
+
+  osc.connect(filt);
+  filt.connect(shelf);
+  shelf.connect(g);
+  g.connect(uiMaster);
+
+  osc.start(t0);
+  osc.stop(t0 + 0.09);
+}
+
+/** --- Hook sur le titre HOKUBE --- */
+const brandEl = document.getElementById("brand");
+
+if (brandEl) {
+  // Desktop hover : seulement quand la souris ENTRE (pas à chaque pixel)
+  brandEl.addEventListener("mouseenter", () => {
+    // IMPORTANT: certains navigateurs bloquent l'audio tant que pas d'interaction.
+    // Ça jouera dès que l'utilisateur aura cliqué/touché quelque part au moins une fois.
+    playMuseumTick();
+    hapticPulse("light");
+  }, { passive: true });
+
+  // Clavier (accessibilité)
+  brandEl.addEventListener("focus", () => {
+    playMuseumTick();
+    hapticPulse("light");
+  }, { passive: true });
+
+  // Mobile : sur touchstart (plus rapide que click)
+  brandEl.addEventListener("touchstart", () => {
+    playMuseumTick();
+    hapticPulse("tick");
+  }, { passive: true });
+
+  // Bonus: "unlock" audio dès première interaction n'importe où
+  window.addEventListener("pointerdown", () => {
+    ensureUiAudio();
+    resumeUiAudioIfNeeded();
+  }, { once: true, passive: true });
+}
+</script>
 </body>
 </html>
