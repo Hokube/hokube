@@ -1,363 +1,238 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Studio Quest (1 écran)</title>
-  <style>
-    html, body { margin:0; height:100%; background:#0b0b0e; overflow:hidden; touch-action:none; }
-    #wrap { position:fixed; inset:0; display:grid; place-items:center;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-    canvas { image-rendering: pixelated; image-rendering: crisp-edges; background:#111; border-radius:14px; box-shadow:0 10px 60px rgba(0,0,0,.5); }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Studio Quest</title>
 
-    #prompt{
-      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-      background:rgba(10,10,12,.72); color:rgba(255,255,255,.92);
-      border:1px solid rgba(255,255,255,.10); border-radius:16px;
-      padding:10px 12px; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      font-size:14px; opacity:0; transition:opacity 120ms ease; pointer-events:none;
-      max-width:min(620px, calc(100vw - 24px));
-    }
-    #prompt.show{ opacity:1; }
+<style>
+html, body { margin:0; height:100%; background:#0b0b0e; overflow:hidden; }
+#wrap { position:fixed; inset:0; display:grid; place-items:center; }
+canvas {
+  image-rendering:pixelated;
+  background:#111;
+  border-radius:14px;
+  box-shadow:0 10px 60px rgba(0,0,0,.5);
+}
+#prompt{
+  position:fixed;
+  left:50%;
+  bottom:20px;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.75);
+  color:white;
+  padding:10px 16px;
+  border-radius:12px;
+  font-family:sans-serif;
+  font-size:14px;
+  opacity:0;
+  transition:.2s;
+}
+#prompt.show{ opacity:1; }
 
-    #touch{ position:fixed; inset:0; pointer-events:none; }
-    .touch-zone{ position:absolute; pointer-events:auto; user-select:none; -webkit-user-select:none; }
+#dialog{
+  position:fixed;
+  inset:0;
+  display:none;
+  place-items:center;
+  background:rgba(0,0,0,.6);
+  font-family:sans-serif;
+}
+#dialog.show{ display:grid; }
 
-    #dpad{
-      left:14px; bottom:14px; width:168px; height:168px;
-      background:rgba(10,10,12,.72); border:1px solid rgba(255,255,255,.10); border-radius:22px;
-      display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
-      gap:6px; padding:10px; box-sizing:border-box; touch-action:none;
-    }
-    .dkey{
-      border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
-      display:grid; place-items:center; color:rgba(255,255,255,.85); font-weight:700; font-size:16px;
-    }
-    .dkey:active,.dkey.active{ background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.25); }
-
-    #buttons{ right:14px; bottom:14px; display:grid; grid-auto-flow:column; gap:12px; align-items:end; touch-action:none; }
-    .btn{
-      width:78px; height:78px; border-radius:999px; background:rgba(10,10,12,.72); border:1px solid rgba(255,255,255,.10);
-      display:grid; place-items:center; font-weight:800; font-size:18px; letter-spacing:.5px;
-      color:rgba(255,255,255,.92); box-shadow:0 8px 26px rgba(0,0,0,.35);
-    }
-    .btn:active,.btn.active{ transform:translateY(1px); background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.25); }
-
-    #dialog{
-      position:fixed; inset:0; display:none; place-items:center;
-      background:rgba(0,0,0,.55); padding:18px; box-sizing:border-box;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:rgba(255,255,255,.92);
-    }
-    #dialog.show{ display:grid; }
-    .card{
-      width:min(540px,100%); background:rgba(18,18,22,.92); border:1px solid rgba(255,255,255,.14);
-      border-radius:18px; padding:16px; box-shadow:0 18px 70px rgba(0,0,0,.5);
-      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    }
-    .card h3{ margin:0 0 8px 0; font-size:18px; }
-    .card p{ margin:0 0 14px 0; opacity:.92; line-height:1.35; }
-    .row{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-    .a{
-      appearance:none; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.08);
-      color:rgba(255,255,255,.95); padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer;
-    }
-    .a.primary{ background:rgba(120,170,255,.22); border-color:rgba(120,170,255,.35); }
-
-    @media (pointer:fine){ #touch{ opacity:0.0; } }
-  </style>
+.card{
+  background:#111;
+  padding:20px;
+  border-radius:14px;
+  color:white;
+  text-align:center;
+}
+button{
+  margin:8px;
+  padding:8px 14px;
+  border-radius:8px;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
+</style>
 </head>
 <body>
-  <div id="wrap"><canvas id="game"></canvas></div>
-  <div id="prompt">Approche-toi du bureau pour interagir…</div>
 
-  <div id="touch">
-    <div id="dpad" class="touch-zone">
-      <div></div><div class="dkey" data-dir="up">▲</div><div></div>
-      <div class="dkey" data-dir="left">◀</div><div></div><div class="dkey" data-dir="right">▶</div>
-      <div></div><div class="dkey" data-dir="down">▼</div><div></div>
-    </div>
-    <div id="buttons" class="touch-zone">
-      <div class="btn" id="btnB">B</div>
-      <div class="btn" id="btnA">A</div>
-    </div>
-  </div>
+<div id="wrap">
+  <canvas id="game"></canvas>
+</div>
 
-  <div id="dialog" role="dialog" aria-modal="true">
-    <div class="card">
-      <h3>Matériel de musique</h3>
-      <p>Tu veux faire des beats ?</p>
-      <div class="row">
-        <button class="a" id="noBtn">Non</button>
-        <button class="a primary" id="yesBtn">Oui</button>
-      </div>
-    </div>
+<div id="prompt">Appuie sur E pour faire des beats 🎵</div>
+
+<div id="dialog">
+  <div class="card">
+    <p>Tu veux faire des beats ?</p>
+    <button onclick="location.href='https://hokube.lu/synth2.html'">Oui</button>
+    <button onclick="closeDialog()">Non</button>
   </div>
+</div>
 
 <script>
 (() => {
-  const MAP_URL = "studio-map2.png";
-  const SPR_URL = "player48.png";
-  const REDIRECT_URL = "https://hokube.lu/synth2.html";
 
-  // Résolution “jeu” (1 écran)
-  const VIEW_W = 480;
-  const VIEW_H = 270;
+const MAP_URL = "studio-map2.png";
+const SPR_URL = "player48.png";
 
-  // Sprite sheet 48x64, 3x4 (walk1 / idle / walk2) x (down/left/right/up)
-  const FRAME_W = 48, FRAME_H = 64;
-  const COLS = 3, ROWS = 4;
+const VIEW_W = 480;
+const VIEW_H = 270;
 
-  // Taille affichée du sprite (1.0 = 48x64). Mets 1.25 si tu veux un peu plus grand.
-  const SPR_DRAW_SCALE = 1.0;
-  const DRAW_W = Math.round(FRAME_W * SPR_DRAW_SCALE);
-  const DRAW_H = Math.round(FRAME_H * SPR_DRAW_SCALE);
+const COLS = 3;
+const ROWS = 4;
 
-  // Zone bureau (en coordonnées écran 480x270) – à ajuster légèrement si besoin
-  // (Top-right desk area)
-  const deskZone = { x: 270, y: 28, w: 190, h: 95 };
+// Ton sprite 1024x1536
+const FRAME_W = Math.floor(1024 / 3); // 341
+const FRAME_H = Math.floor(1536 / 4); // 384
 
-  // Collisions (optionnel). Ici on évite de traverser le bureau.
-  const colliders = [
-    {x: deskZone.x, y: deskZone.y, w: deskZone.w, h: deskZone.h},
-    // bords
-    {x: -50, y: -50, w: 50, h: 400},
-    {x: VIEW_W, y: -50, w: 50, h: 400},
-    {x: -50, y: -50, w: 600, h: 50},
-    {x: -50, y: VIEW_H, w: 600, h: 50},
-  ];
+const TARGET_HEIGHT = 100; // taille visible du personnage
 
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = false;
+const deskZone = { x: 260, y: 30, w: 200, h: 100 };
 
-  function fitToScreen(){
-    const wrap = document.getElementById("wrap");
-    const vw = wrap.clientWidth, vh = wrap.clientHeight;
-    const s = Math.floor(Math.min(vw/VIEW_W, vh/VIEW_H) * 1000)/1000;
-    canvas.width = VIEW_W; canvas.height = VIEW_H;
-    canvas.style.width = Math.floor(VIEW_W*s) + "px";
-    canvas.style.height = Math.floor(VIEW_H*s) + "px";
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+canvas.width = VIEW_W;
+canvas.height = VIEW_H;
+
+const mapImg = new Image();
+mapImg.src = MAP_URL;
+
+const sprImg = new Image();
+sprImg.src = SPR_URL;
+
+const player = {
+  x: 230,
+  y: 160,
+  w: 20,
+  h: 20,
+  speed: 140,
+  facing: "down",
+  moving:false,
+  animCol:1,
+  animTime:0
+};
+
+const keys = new Set();
+
+addEventListener("keydown", e => keys.add(e.code));
+addEventListener("keyup", e => keys.delete(e.code));
+
+function overlap(a,b){
+  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+
+function move(dt){
+  let vx=0, vy=0;
+
+  if(keys.has("ArrowLeft")||keys.has("KeyA")) vx -= player.speed;
+  if(keys.has("ArrowRight")||keys.has("KeyD")) vx += player.speed;
+  if(keys.has("ArrowUp")||keys.has("KeyW")) vy -= player.speed;
+  if(keys.has("ArrowDown")||keys.has("KeyS")) vy += player.speed;
+
+  player.moving = vx!==0 || vy!==0;
+
+  if(vx && vy){
+    const inv = 1/Math.sqrt(2);
+    vx*=inv; vy*=inv;
   }
-  addEventListener("resize", fitToScreen, {passive:true});
-  fitToScreen();
 
-  // Images
-  const mapImg = new Image(); mapImg.src = MAP_URL;
-  const sprImg = new Image(); sprImg.src = SPR_URL;
+  if(Math.abs(vx)>Math.abs(vy)){
+    if(vx>0) player.facing="right";
+    if(vx<0) player.facing="left";
+  }else if(vy){
+    if(vy>0) player.facing="down";
+    if(vy<0) player.facing="up";
+  }
 
-  // Player (coordonnées écran)
-  const player = {
-    x: 230, y: 155,   // hitbox top-left
-    w: 18, h: 18,
-    speed: 140,
-    facing: "down",
-    moving: false,
-    animTime: 0,
-    animCol: 1, // 0,1,2
+  player.x += vx*dt;
+  player.y += vy*dt;
+}
+
+function animate(dt){
+  if(player.moving){
+    player.animTime += dt;
+    const phase = Math.floor(player.animTime*10)%4;
+    player.animCol = [0,1,2,1][phase];
+  }else{
+    player.animCol = 1;
+  }
+}
+
+function drawPlayer(){
+  if(!sprImg.complete) return;
+
+  const row =
+    player.facing==="down" ? 0 :
+    player.facing==="left" ? 1 :
+    player.facing==="right" ? 2 : 3;
+
+  const sx = player.animCol * FRAME_W;
+  const sy = row * FRAME_H;
+
+  const scale = TARGET_HEIGHT / FRAME_H;
+  const drawW = FRAME_W * scale;
+  const drawH = TARGET_HEIGHT;
+
+  const dx = player.x - drawW/2 + player.w/2;
+  const dy = player.y - drawH + player.h;
+
+  ctx.drawImage(sprImg, sx, sy, FRAME_W, FRAME_H, dx, dy, drawW, drawH);
+}
+
+function render(){
+  if(mapImg.complete){
+    ctx.drawImage(mapImg, 0,0, VIEW_W, VIEW_H);
+  }else{
+    ctx.fillStyle="#222";
+    ctx.fillRect(0,0,VIEW_W,VIEW_H);
+  }
+  drawPlayer();
+}
+
+function updateInteraction(){
+  const interactZone = {
+    x: deskZone.x-20,
+    y: deskZone.y+deskZone.h-10,
+    w: deskZone.w+40,
+    h: 70
   };
 
-  // Input
-  const keys = new Set();
-  const input = { up:false, down:false, left:false, right:false, interact:false };
+  const near = overlap(player, interactZone);
+  document.getElementById("prompt").classList.toggle("show", near);
 
-  addEventListener("keydown", (e) => {
-    keys.add(e.code);
-    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","Enter"].includes(e.code)) e.preventDefault();
-  }, {passive:false});
-  addEventListener("keyup", (e) => keys.delete(e.code), {passive:true});
-
-  function readKeyboard(){
-    input.up = keys.has("ArrowUp") || keys.has("KeyW");
-    input.down = keys.has("ArrowDown") || keys.has("KeyS");
-    input.left = keys.has("ArrowLeft") || keys.has("KeyA");
-    input.right = keys.has("ArrowRight") || keys.has("KeyD");
-    input.interact = keys.has("KeyE") || keys.has("Enter");
+  if(near && keys.has("KeyE")){
+    openDialog();
   }
+}
 
-  // Touch
-  const dkeys = [...document.querySelectorAll(".dkey")];
-  const touchState = { up:false, down:false, left:false, right:false, a:false };
+function openDialog(){
+  document.getElementById("dialog").classList.add("show");
+}
+window.closeDialog = function(){
+  document.getElementById("dialog").classList.remove("show");
+}
 
-  function setDir(dir, pressed){
-    touchState[dir] = pressed;
-    dkeys.forEach(k => { if (k.dataset.dir === dir) k.classList.toggle("active", pressed); });
-  }
-  dkeys.forEach(k => {
-    const dir = k.dataset.dir;
-    const start=(e)=>{ e.preventDefault(); setDir(dir,true); };
-    const end=(e)=>{ e.preventDefault(); setDir(dir,false); };
-    k.addEventListener("pointerdown", start);
-    k.addEventListener("pointerup", end);
-    k.addEventListener("pointercancel", end);
-    k.addEventListener("pointerleave", end);
-  });
+let last=performance.now();
+function loop(t){
+  const dt=Math.min(0.033,(t-last)/1000);
+  last=t;
 
-  const btnA = document.getElementById("btnA");
-  const btnB = document.getElementById("btnB");
-  function bindButton(el, name){
-    const down=(e)=>{ e.preventDefault(); touchState[name]=true; el.classList.add("active"); };
-    const up=(e)=>{ e.preventDefault(); touchState[name]=false; el.classList.remove("active"); };
-    el.addEventListener("pointerdown", down);
-    el.addEventListener("pointerup", up);
-    el.addEventListener("pointercancel", up);
-    el.addEventListener("pointerleave", up);
-  }
-  bindButton(btnA, "a");
-  bindButton(btnB, "b");
+  move(dt);
+  animate(dt);
+  updateInteraction();
+  render();
 
-  function mergeInputs(){
-    input.up ||= touchState.up;
-    input.down ||= touchState.down;
-    input.left ||= touchState.left;
-    input.right ||= touchState.right;
-    input.interact ||= touchState.a; // A = interagir
-  }
-
-  function readGamepad(){
-    const pads = navigator.getGamepads?.() || [];
-    const gp = pads.find(p => p && p.connected);
-    if (!gp) return;
-    const axX = gp.axes?.[0] ?? 0;
-    const axY = gp.axes?.[1] ?? 0;
-    const dead = 0.25;
-
-    input.left ||= (axX < -dead) || gp.buttons?.[14]?.pressed;
-    input.right ||= (axX > dead) || gp.buttons?.[15]?.pressed;
-    input.up ||= (axY < -dead) || gp.buttons?.[12]?.pressed;
-    input.down ||= (axY > dead) || gp.buttons?.[13]?.pressed;
-
-    input.interact ||= !!gp.buttons?.[0]?.pressed;
-  }
-
-  // Collision
-  function overlap(a,b){
-    return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
-  }
-
-  function move(dt){
-    let vx=0, vy=0;
-    if (input.left) vx -= player.speed;
-    if (input.right) vx += player.speed;
-    if (input.up) vy -= player.speed;
-    if (input.down) vy += player.speed;
-
-    player.moving = (vx!==0 || vy!==0);
-
-    if (vx && vy){ const inv=1/Math.sqrt(2); vx*=inv; vy*=inv; }
-
-    if (Math.abs(vx) > Math.abs(vy)) {
-      if (vx>0) player.facing="right";
-      if (vx<0) player.facing="left";
-    } else if (vy) {
-      if (vy>0) player.facing="down";
-      if (vy<0) player.facing="up";
-    }
-
-    const nx={x:player.x+vx*dt,y:player.y,w:player.w,h:player.h};
-    if (!colliders.some(c=>overlap(nx,c))) player.x=nx.x;
-
-    const ny={x:player.x,y:player.y+vy*dt,w:player.w,h:player.h};
-    if (!colliders.some(c=>overlap(ny,c))) player.y=ny.y;
-  }
-
-  function anim(dt){
-    if (player.moving){
-      player.animTime += dt;
-      const speed = 10;
-      const phase = Math.floor(player.animTime*speed) % 4;
-      player.animCol = [0,1,2,1][phase];
-    } else {
-      player.animTime = 0;
-      player.animCol = 1;
-    }
-  }
-
-  // Interaction
-  const prompt = document.getElementById("prompt");
-  const dialog = document.getElementById("dialog");
-  const yesBtn = document.getElementById("yesBtn");
-  const noBtn = document.getElementById("noBtn");
-
-  let dialogOpen=false, latch=false;
-
-  function updateInteraction(){
-    const p={x:player.x,y:player.y,w:player.w,h:player.h};
-    const interactZone={ x: deskZone.x-16, y: deskZone.y+deskZone.h-8, w: deskZone.w+32, h: 70 };
-
-    const near = overlap(p, interactZone);
-    prompt.classList.toggle("show", near && !dialogOpen);
-
-    const wants = input.interact;
-    if (wants && !latch){
-      latch=true;
-      if (near && !dialogOpen){ dialogOpen=true; dialog.classList.add("show"); }
-      else if (dialogOpen){ location.href = REDIRECT_URL; }
-    }
-    if (!wants) latch=false;
-  }
-
-  yesBtn.addEventListener("click", ()=>location.href=REDIRECT_URL);
-  noBtn.addEventListener("click", ()=>{ dialogOpen=false; dialog.classList.remove("show"); });
-  addEventListener("keydown",(e)=>{
-    if (e.code==="Escape" && dialogOpen){ e.preventDefault(); dialogOpen=false; dialog.classList.remove("show"); }
-  },{passive:false});
-
-  // Render
-  function drawPlayer(){
-    if (!(sprImg.complete && sprImg.naturalWidth>0)) return;
-
-    const row =
-      (player.facing==="down") ? 0 :
-      (player.facing==="left") ? 1 :
-      (player.facing==="right") ? 2 : 3;
-
-    const col = player.animCol;
-
-    const sx = col * FRAME_W;
-    const sy = row * FRAME_H;
-
-    // align “feet” to hitbox bottom
-    const dx = Math.round(player.x - (DRAW_W/2) + (player.w/2));
-    const dy = Math.round(player.y - DRAW_H + player.h);
-
-    ctx.drawImage(sprImg, sx, sy, FRAME_W, FRAME_H, dx, dy, DRAW_W, DRAW_H);
-  }
-
-  function render(){
-    // background
-    if (mapImg.complete && mapImg.naturalWidth>0){
-      // IMPORTANT : ton background doit être déjà à l’échelle (480x270 idéalement).
-      // Si la taille diffère, on le fit dans l’écran :
-      ctx.drawImage(mapImg, 0, 0, VIEW_W, VIEW_H);
-    } else {
-      ctx.fillStyle="#222"; ctx.fillRect(0,0,VIEW_W,VIEW_H);
-    }
-
-    drawPlayer();
-  }
-
-  // Loop
-  let last=performance.now();
-  function loop(t){
-    const dt=Math.min(0.033,(t-last)/1000); last=t;
-
-    input.up=input.down=input.left=input.right=false;
-    input.interact=false;
-
-    readKeyboard();
-    mergeInputs();
-    readGamepad();
-
-    if (!dialogOpen) move(dt);
-    anim(dt);
-    updateInteraction();
-    render();
-
-    requestAnimationFrame(loop);
-  }
   requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
 })();
 </script>
 </body>
 </html>
-
