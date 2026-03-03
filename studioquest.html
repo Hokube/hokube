@@ -3,80 +3,232 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Studio Quest HOKUBE</title>
+  <title>Studio Quest (ALTTP-like)</title>
   <style>
-    :root { --ui: rgba(10,10,12,.72); --ui2: rgba(255,255,255,.10); --text: rgba(255,255,255,.92); }
-    html, body { margin:0; height:100%; background:#0b0b0e; color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; overflow:hidden; touch-action:none; }
-    #wrap { position:fixed; inset:0; display:grid; place-items:center; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-    canvas { image-rendering:pixelated; image-rendering:crisp-edges; background:#111; border-radius:14px; box-shadow:0 10px 60px rgba(0,0,0,.5); max-width:100%; max-height:100%; }
+    :root {
+      --ui: rgba(10, 10, 12, 0.72);
+      --ui2: rgba(255, 255, 255, 0.10);
+      --stroke: rgba(255, 255, 255, 0.85);
+      --text: rgba(255, 255, 255, 0.92);
+    }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #0b0b0e;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow: hidden;
+      touch-action: none; /* important pour le d-pad */
+    }
+    #wrap {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #111;
+      border-radius: 14px;
+      box-shadow: 0 10px 60px rgba(0,0,0,0.5);
+      max-width: 100%;
+      max-height: 100%;
+    }
 
-    #hud { position:fixed; inset:0; pointer-events:none; }
-    .panel { position:absolute; background:var(--ui); border:1px solid var(--ui2); border-radius:16px; padding:10px 12px; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
-    #hint { left:12px; top:12px; font-size:13px; opacity:.9; line-height:1.25; max-width:min(560px, calc(100vw - 24px)); }
-    #prompt { left:50%; bottom:18px; transform:translateX(-50%); font-size:14px; opacity:0; transition:opacity 120ms ease; max-width:min(620px, calc(100vw - 24px)); }
-    #prompt.show { opacity:1; }
+    /* UI overlay */
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+    .panel {
+      position: absolute;
+      background: var(--ui);
+      border: 1px solid var(--ui2);
+      border-radius: 16px;
+      padding: 10px 12px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+    #hint {
+      left: 12px;
+      top: 12px;
+      font-size: 13px;
+      opacity: 0.9;
+      line-height: 1.25;
+      max-width: min(560px, calc(100vw - 24px));
+    }
+    #prompt {
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 120ms ease;
+      max-width: min(620px, calc(100vw - 24px));
+    }
+    #prompt.show { opacity: 1; }
 
-    #touch { position:fixed; inset:0; pointer-events:none; }
-    .touch-zone { position:absolute; pointer-events:auto; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
-
+    /* Touch controls */
+    #touch {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+    .touch-zone {
+      position: absolute;
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
     #dpad {
-      left:14px; bottom:14px; width:168px; height:168px;
-      background:var(--ui); border:1px solid var(--ui2); border-radius:22px;
-      display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
-      gap:6px; padding:10px; box-sizing:border-box; touch-action:none;
+      left: 14px;
+      bottom: 14px;
+      width: 168px;
+      height: 168px;
+      background: var(--ui);
+      border: 1px solid var(--ui2);
+      border-radius: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 6px;
+      padding: 10px;
+      box-sizing: border-box;
+      touch-action: none;
     }
     .dkey {
-      border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
-      display:grid; place-items:center; color:rgba(255,255,255,.85); font-weight:700; font-size:16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.85);
+      font-weight: 700;
+      font-size: 16px;
     }
-    .dkey:active,.dkey.active{ background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.25); }
+    .dkey:active, .dkey.active {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.25);
+    }
 
-    #buttons { right:14px; bottom:14px; display:grid; grid-auto-flow:column; gap:12px; align-items:end; touch-action:none; }
+    #buttons {
+      right: 14px;
+      bottom: 14px;
+      display: grid;
+      grid-auto-flow: column;
+      gap: 12px;
+      align-items: end;
+      touch-action: none;
+    }
     .btn {
-      width:78px; height:78px; border-radius:999px; background:var(--ui); border:1px solid var(--ui2);
-      display:grid; place-items:center; font-weight:800; font-size:18px; letter-spacing:.5px;
-      color:rgba(255,255,255,.92); box-shadow:0 8px 26px rgba(0,0,0,.35);
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      background: var(--ui);
+      border: 1px solid var(--ui2);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.92);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.35);
     }
-    .btn:active,.btn.active{ transform:translateY(1px); background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.25); }
+    .btn:active, .btn.active {
+      transform: translateY(1px);
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.25);
+    }
 
-    #dialog { position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); padding:18px; box-sizing:border-box; }
-    #dialog.show { display:grid; }
+    /* Dialog */
+    #dialog {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,0.55);
+      padding: 18px;
+      box-sizing: border-box;
+    }
+    #dialog.show { display: grid; }
     .card {
-      width:min(540px,100%); background:rgba(18,18,22,.92); border:1px solid rgba(255,255,255,.14);
-      border-radius:18px; padding:16px; box-shadow:0 18px 70px rgba(0,0,0,.5);
-      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      width: min(540px, 100%);
+      background: rgba(18,18,22,0.92);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 18px 70px rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    .card h3 { margin:0 0 8px 0; font-size:18px; }
-    .card p { margin:0 0 14px 0; opacity:.92; line-height:1.35; }
-    .row { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+    }
+    .card p {
+      margin: 0 0 14px 0;
+      opacity: 0.92;
+      line-height: 1.35;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
     .a {
-      appearance:none; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.08);
-      color:rgba(255,255,255,.95); padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer;
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.95);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
     }
-    .a.primary{ background:rgba(120,170,255,.22); border-color:rgba(120,170,255,.35); }
+    .a.primary {
+      background: rgba(120,170,255,0.22);
+      border-color: rgba(120,170,255,0.35);
+    }
 
-    @media (pointer:fine){ #touch{ opacity:0.0; } }
+    /* auto-hide touch UI on desktop pointers */
+    @media (pointer:fine) {
+      #touch { opacity: 0.0; }
+    }
   </style>
 </head>
 <body>
   <div id="wrap">
-    <canvas id="game" width="480" height="270"></canvas>
+    <canvas id="game" width="480" height="270" aria-label="Jeu"></canvas>
   </div>
 
   <div id="hud">
     <div id="hint" class="panel">
       <div><b>Contrôles</b> : Flèches/WASD · <b>E</b> (interagir) · <b>Entrée</b> (valider)</div>
-      <div>Manette : stick gauche / d-pad · bouton <b>A</b> (Xbox) / <b>X</b> (PS) = interagir</div>
+      <div>Manette : stick gauche / d-pad · <b>A</b> (Xbox) / <b>X</b> (PS) pour interagir</div>
     </div>
     <div id="prompt" class="panel">Approche-toi du bureau pour interagir…</div>
   </div>
 
   <div id="touch">
     <div id="dpad" class="touch-zone" aria-label="Direction">
-      <div></div><div class="dkey" data-dir="up">▲</div><div></div>
-      <div class="dkey" data-dir="left">◀</div><div></div><div class="dkey" data-dir="right">▶</div>
-      <div></div><div class="dkey" data-dir="down">▼</div><div></div>
+      <div></div>
+      <div class="dkey" data-dir="up">▲</div>
+      <div></div>
+      <div class="dkey" data-dir="left">◀</div>
+      <div></div>
+      <div class="dkey" data-dir="right">▶</div>
+      <div></div>
+      <div class="dkey" data-dir="down">▼</div>
+      <div></div>
     </div>
+
     <div id="buttons" class="touch-zone" aria-label="Boutons">
       <div class="btn" id="btnB">B</div>
       <div class="btn" id="btnA">A</div>
@@ -100,178 +252,104 @@
 <script>
 (() => {
   // ====== CONFIG ======
-  const MAP_IMAGE_URL = "studio-map.png"; // décor pixel-art SANS personnage
+  const MAP_IMAGE_URL = "studio-map.png"; // mets ton image pixel-art ici (même dossier)
   const REDIRECT_URL = "https://hokube.lu/synth2.html";
 
-  // Zone du bureau "matériel musique" (à ajuster selon ta map)
+  // Zone du "bureau musique" (coordonnées en pixels du canvas monde)
+  // Ajuste facilement ces valeurs pour coller exactement au bureau de ton image.
   const deskZone = { x: 300, y: 50, w: 140, h: 90 };
 
-  // Collisions simples (rectangles). Ajuste si besoin.
+  // Collisions simples (murs/objets) : rectangles
+  // À ajuster si tu veux bloquer des zones précises (canapé, étagère, bureaux, etc.)
   const colliders = [
+    // bordures (évite de sortir de la map)
     {x: -20, y: -20, w: 20, h: 1000},
     {x: 480, y: -20, w: 20, h: 1000},
     {x: -20, y: -20, w: 1000, h: 20},
     {x: -20, y: 270, w: 1000, h: 20},
 
-    // obstacles approximatifs (à recaler à ta map)
-    {x: 25, y: 85, w: 170, h: 90},   // canapé
-    {x: 200, y: 30, w: 95, h: 140},  // étagère
-    {x: 330, y: 170, w: 140, h: 70}, // table droite
-    {x: deskZone.x, y: deskZone.y, w: deskZone.w, h: deskZone.h}, // bureau musique
+    // Exemples d'obstacles (à affiner)
+    {x: 25, y: 85, w: 170, h: 90},   // canapé approx
+    {x: 200, y: 30, w: 95, h: 140},   // étagère approx
+    {x: 330, y: 170, w: 140, h: 70},  // table droite approx
+    // Bureau musique (bloque le passage, interaction devant)
+    {x: deskZone.x, y: deskZone.y, w: deskZone.w, h: deskZone.h},
   ];
 
-  // ====== CANVAS / SCALE ======
+  // ====== CANVAS / RENDER SCALE ======
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
 
   const wrap = document.getElementById("wrap");
   function resizeCanvas() {
-    const baseW = 480, baseH = 270;
-    canvas.width = baseW; canvas.height = baseH;
-    const vw = wrap.clientWidth, vh = wrap.clientHeight;
-    const scale = Math.floor(Math.min(vw/baseW, vh/baseH)*1000)/1000;
-    canvas.style.width = Math.floor(baseW*scale) + "px";
-    canvas.style.height = Math.floor(baseH*scale) + "px";
+    // On garde une résolution interne fixe (style rétro), mais on scale pour remplir l'écran
+    const baseW = 480, baseH = 270; // 16:9 “ALTTP-ish”
+    canvas.width = baseW;
+    canvas.height = baseH;
+
+    // taille affichée
+    const vw = wrap.clientWidth;
+    const vh = wrap.clientHeight;
+    const scale = Math.floor(Math.min(vw / baseW, vh / baseH) * 1000) / 1000;
+    canvas.style.width = Math.floor(baseW * scale) + "px";
+    canvas.style.height = Math.floor(baseH * scale) + "px";
   }
-  addEventListener("resize", resizeCanvas, {passive:true});
+  window.addEventListener("resize", resizeCanvas, {passive:true});
   resizeCanvas();
 
-  // ====== LOAD MAP ======
+  // ====== LOAD MAP IMAGE ======
   const mapImg = new Image();
   mapImg.src = MAP_IMAGE_URL;
-  mapImg.onload = () => {};
-  mapImg.onerror = () => console.warn("Map introuvable. Mets un 'studio-map.png' (décor sans perso) dans le même dossier.");
-
-  // ====== SPRITE SHEET (généré en code) ======
-  // 4 directions x 3 frames (gauche, idle, droite)
-  // Layout: rows = [down, left, right, up], cols = [step1, idle, step2]
-  const SPR_W = 16, SPR_H = 24;
-  const sheet = document.createElement("canvas");
-  sheet.width = SPR_W * 3;
-  sheet.height = SPR_H * 4;
-  const sctx = sheet.getContext("2d");
-  sctx.imageSmoothingEnabled = false;
-
-  function px(x,y,w,h,c){ sctx.fillStyle=c; sctx.fillRect(x,y,w,h); }
-
-  function drawFrame(row, col, pose) {
-    // origin
-    const ox = col * SPR_W;
-    const oy = row * SPR_H;
-
-    // clear
-    sctx.clearRect(ox, oy, SPR_W, SPR_H);
-
-    // palette (simple)
-    const skin = "#3b2a1f";
-    const shirt = "#f3f3f3";
-    const jean = "#2b4f9b";
-    const shoe = "#0f0f12";
-    const outline = "#121216";
-    const hair = "#0f0f12";
-
-    // step offset for walking
-    const step = (pose === "step1") ? -1 : (pose === "step2" ? 1 : 0);
-
-    // shadow
-    sctx.globalAlpha = 0.35;
-    px(ox+4, oy+20, 8, 2, "#000");
-    sctx.globalAlpha = 1;
-
-    // outline body block (ALTTP-ish chunky)
-    // head
-    px(ox+5, oy+3, 6, 6, outline);
-    px(ox+6, oy+4, 4, 4, skin);
-    px(ox+6, oy+3, 4, 1, hair); // hairline
-    px(ox+5, oy+4, 1, 3, hair); // side
-    px(ox+10, oy+4, 1, 3, hair);
-
-    // torso outline
-    px(ox+4, oy+9, 8, 8, outline);
-    px(ox+5, oy+10, 6, 6, shirt);
-
-    // arms (tiny)
-    px(ox+3, oy+10, 2, 5, outline);
-    px(ox+11, oy+10, 2, 5, outline);
-
-    // pants outline
-    px(ox+4, oy+17, 8, 4, outline);
-    px(ox+5, oy+18, 6, 2, jean);
-
-    // legs + shoes with walking variation
-    // left leg
-    px(ox+5+step, oy+20, 3, 2, jean);
-    px(ox+5+step, oy+22, 3, 1, shoe);
-    // right leg
-    px(ox+8-step, oy+20, 3, 2, jean);
-    px(ox+8-step, oy+22, 3, 1, shoe);
-
-    // direction hint (face)
-    if (row === 3) { // up: hair more visible, face less
-      px(ox+6, oy+4, 4, 1, hair);
-      px(ox+6, oy+6, 4, 1, hair);
-    } else if (row === 0) { // down: eyes
-      px(ox+7, oy+6, 1, 1, "#000");
-      px(ox+9, oy+6, 1, 1, "#000");
-    } else if (row === 1) { // left: one eye
-      px(ox+7, oy+6, 1, 1, "#000");
-    } else if (row === 2) { // right: one eye
-      px(ox+9, oy+6, 1, 1, "#000");
-    }
-  }
-
-  // build sheet
-  const ROW = { down:0, left:1, right:2, up:3 };
-  const COL = { step1:0, idle:1, step2:2 };
-  for (const [dir, r] of Object.entries(ROW)) {
-    drawFrame(r, COL.step1, "step1");
-    drawFrame(r, COL.idle, "idle");
-    drawFrame(r, COL.step2, "step2");
-  }
+  mapImg.onload = () => { /* ok */ };
+  mapImg.onerror = () => {
+    console.warn("Impossible de charger studio-map.png. Le jeu fonctionne quand même (fond gris).");
+  };
 
   // ====== PLAYER ======
   const player = {
     x: 240, y: 160,
-    w: 12, h: 16,          // hitbox
-    speed: 90,
+    w: 14, h: 16,
+    speed: 90, // px/s
+    vx: 0, vy: 0,
     facing: "down",
-    animTime: 0,
-    animFrame: 1,          // 0,1,2 (col)
-    moving: false,
   };
 
   // ====== INPUT ======
   const keys = new Set();
-  const input = { up:false, down:false, left:false, right:false, interact:false };
+  const input = { up:false, down:false, left:false, right:false, a:false, b:false, interact:false };
 
-  addEventListener("keydown", (e) => {
+  window.addEventListener("keydown", (e) => {
     keys.add(e.code);
     if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","Enter"].includes(e.code)) e.preventDefault();
   }, {passive:false});
-  addEventListener("keyup", (e) => keys.delete(e.code), {passive:true});
+
+  window.addEventListener("keyup", (e) => {
+    keys.delete(e.code);
+  }, {passive:true});
 
   function readKeyboard() {
     input.up = keys.has("ArrowUp") || keys.has("KeyW");
     input.down = keys.has("ArrowDown") || keys.has("KeyS");
     input.left = keys.has("ArrowLeft") || keys.has("KeyA");
     input.right = keys.has("ArrowRight") || keys.has("KeyD");
+
+    // Interagir : E / Entrée
     input.interact = keys.has("KeyE") || keys.has("Enter");
   }
 
-  // Touch
+  // Touch D-pad
   const dpad = document.getElementById("dpad");
   const dkeys = [...dpad.querySelectorAll(".dkey")];
-  const touchState = { up:false, down:false, left:false, right:false, a:false };
+  const touchState = { up:false, down:false, left:false, right:false, a:false, b:false, interact:false };
 
   function setDir(dir, pressed) {
     touchState[dir] = pressed;
-    dkeys.forEach(k => k.classList.toggle("active", k.dataset.dir === dir && pressed));
-    // allow multi-press feel
     dkeys.forEach(k => {
       if (k.dataset.dir === dir) k.classList.toggle("active", pressed);
     });
   }
+
   dkeys.forEach(k => {
     const dir = k.dataset.dir;
     const start = (e) => { e.preventDefault(); setDir(dir, true); };
@@ -282,8 +360,10 @@
     k.addEventListener("pointerleave", end);
   });
 
+  // Touch buttons A/B
   const btnA = document.getElementById("btnA");
   const btnB = document.getElementById("btnB");
+
   function bindButton(el, name) {
     const down = (e) => { e.preventDefault(); touchState[name] = true; el.classList.add("active"); };
     const up = (e) => { e.preventDefault(); touchState[name] = false; el.classList.remove("active"); };
@@ -295,13 +375,15 @@
   bindButton(btnA, "a");
   bindButton(btnB, "b");
 
+  // A = interagir/valider sur mobile
   function mergeInputs() {
-    input.up ||= touchState.up;
-    input.down ||= touchState.down;
-    input.left ||= touchState.left;
-    input.right ||= touchState.right;
-    // A = interagir
-    input.interact ||= touchState.a;
+    input.up = input.up || touchState.up;
+    input.down = input.down || touchState.down;
+    input.left = input.left || touchState.left;
+    input.right = input.right || touchState.right;
+    input.a = touchState.a;
+    input.b = touchState.b;
+    input.interact = input.interact || touchState.a; // A = interact
   }
 
   // Gamepad
@@ -309,6 +391,7 @@
     const pads = navigator.getGamepads?.() || [];
     const gp = pads.find(p => p && p.connected);
     if (!gp) return;
+
     const axX = gp.axes?.[0] ?? 0;
     const axY = gp.axes?.[1] ?? 0;
     const dead = 0.25;
@@ -318,13 +401,16 @@
     const gpUp = (axY < -dead) || gp.buttons?.[12]?.pressed;
     const gpDown = (axY > dead) || gp.buttons?.[13]?.pressed;
 
-    input.left ||= gpLeft;
-    input.right ||= gpRight;
-    input.up ||= gpUp;
-    input.down ||= gpDown;
+    input.left = input.left || gpLeft;
+    input.right = input.right || gpRight;
+    input.up = input.up || gpUp;
+    input.down = input.down || gpDown;
 
-    const btn0 = gp.buttons?.[0]?.pressed; // A (Xbox)
-    input.interact ||= !!btn0;
+    // bouton "A" typique (Xbox = 0). Sur PS ça peut varier mais marche souvent.
+    const btn0 = gp.buttons?.[0]?.pressed;
+    const btn1 = gp.buttons?.[1]?.pressed;
+    input.interact = input.interact || btn0;
+    input.b = input.b || btn1;
   }
 
   // ====== COLLISION ======
@@ -334,49 +420,34 @@
 
   function moveWithCollision(dt) {
     const speed = player.speed;
-    let vx = 0, vy = 0;
-    if (input.left) vx -= speed;
-    if (input.right) vx += speed;
-    if (input.up) vy -= speed;
-    if (input.down) vy += speed;
+    player.vx = 0; player.vy = 0;
 
-    player.moving = (vx !== 0 || vy !== 0);
+    if (input.left) player.vx -= speed;
+    if (input.right) player.vx += speed;
+    if (input.up) player.vy -= speed;
+    if (input.down) player.vy += speed;
 
-    if (vx !== 0 && vy !== 0) {
+    if (player.vx !== 0 && player.vy !== 0) {
       const inv = 1 / Math.sqrt(2);
-      vx *= inv; vy *= inv;
+      player.vx *= inv;
+      player.vy *= inv;
     }
 
-    // facing
-    if (Math.abs(vx) > Math.abs(vy)) {
-      if (vx > 0) player.facing = "right";
-      if (vx < 0) player.facing = "left";
-    } else if (vy !== 0) {
-      if (vy > 0) player.facing = "down";
-      if (vy < 0) player.facing = "up";
+    if (Math.abs(player.vx) > Math.abs(player.vy)) {
+      if (player.vx > 0) player.facing = "right";
+      if (player.vx < 0) player.facing = "left";
+    } else if (player.vy !== 0) {
+      if (player.vy > 0) player.facing = "down";
+      if (player.vy < 0) player.facing = "up";
     }
 
     // move X
-    const nextX = { x: player.x + vx * dt, y: player.y, w: player.w, h: player.h };
+    const nextX = { x: player.x + player.vx * dt, y: player.y, w: player.w, h: player.h };
     if (!colliders.some(c => rectsOverlap(nextX, c))) player.x = nextX.x;
 
     // move Y
-    const nextY = { x: player.x, y: player.y + vy * dt, w: player.w, h: player.h };
+    const nextY = { x: player.x, y: player.y + player.vy * dt, w: player.w, h: player.h };
     if (!colliders.some(c => rectsOverlap(nextY, c))) player.y = nextY.y;
-  }
-
-  // ====== ANIMATION ======
-  function updateAnimation(dt) {
-    // animation walking: 0-1-2-1...
-    if (player.moving) {
-      player.animTime += dt;
-      const speed = 10; // frames/sec-ish influence
-      const phase = Math.floor(player.animTime * speed) % 4;
-      player.animFrame = [0,1,2,1][phase];
-    } else {
-      player.animTime = 0;
-      player.animFrame = 1; // idle = col 1
-    }
   }
 
   // ====== INTERACTION ======
@@ -386,63 +457,123 @@
   const noBtn = document.getElementById("noBtn");
 
   let nearDesk = false;
-  let interactLatch = false;
+  let interactLatch = false; // anti-spam (front descendant)
   let dialogOpen = false;
 
   function updateInteraction() {
     const pRect = { x: player.x, y: player.y, w: player.w, h: player.h };
-    const interactZone = { x: deskZone.x - 14, y: deskZone.y + deskZone.h - 4, w: deskZone.w + 28, h: 50 };
+
+    // zone "devant" le bureau : on élargit un peu le deskZone vers le bas
+    const interactZone = {
+      x: deskZone.x - 14,
+      y: deskZone.y + deskZone.h - 4,
+      w: deskZone.w + 28,
+      h: 50
+    };
+
     nearDesk = rectsOverlap(pRect, interactZone);
     prompt.classList.toggle("show", nearDesk && !dialogOpen);
 
-    const wants = input.interact;
-    if (wants && !interactLatch) {
+    const wantsInteract = input.interact;
+
+    if (wantsInteract && !interactLatch) {
       interactLatch = true;
-      if (nearDesk && !dialogOpen) openDialog();
-      else if (dialogOpen) goYes();
+
+      if (nearDesk && !dialogOpen) {
+        openDialog();
+      } else if (dialogOpen) {
+        // si dialogue ouvert, A/Enter = "Oui" par défaut
+        goYes();
+      }
     }
-    if (!wants) interactLatch = false;
+    if (!wantsInteract) interactLatch = false;
   }
 
-  function openDialog() { dialogOpen = true; dialog.classList.add("show"); }
-  function closeDialog(){ dialogOpen = false; dialog.classList.remove("show"); }
-  function goYes(){ location.href = REDIRECT_URL; }
+  function openDialog() {
+    dialogOpen = true;
+    dialog.classList.add("show");
+  }
+
+  function closeDialog() {
+    dialogOpen = false;
+    dialog.classList.remove("show");
+  }
+
+  function goYes() {
+    // redirection
+    window.location.href = REDIRECT_URL;
+  }
 
   yesBtn.addEventListener("click", goYes);
   noBtn.addEventListener("click", closeDialog);
-  addEventListener("keydown", (e) => {
-    if (e.code === "Escape" && dialogOpen) { e.preventDefault(); closeDialog(); }
+
+  // Escape ferme le dialogue
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Escape" && dialogOpen) {
+      e.preventDefault();
+      closeDialog();
+    }
   }, {passive:false});
 
   // ====== RENDER ======
-  function drawPlayerSprite() {
-    const row = (player.facing === "down") ? 0 :
-                (player.facing === "left") ? 1 :
-                (player.facing === "right") ? 2 : 3;
-    const col = player.animFrame;
+  function drawPlayer() {
+    // Sprite minimal “pixel art” (tu pourras remplacer par un sprite sheet plus tard)
+    const px = Math.round(player.x);
+    const py = Math.round(player.y);
 
-    // Place sprite so feet align with hitbox bottom (ALTTP vibe)
-    const dx = Math.round(player.x - 2);
-    const dy = Math.round(player.y - 8);
+    // ombre
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(px + 3, py + player.h - 2, player.w - 6, 3);
+    ctx.globalAlpha = 1;
 
-    const sx = col * SPR_W;
-    const sy = row * SPR_H;
+    // tête
+    ctx.fillStyle = "#3b2a1f";
+    ctx.fillRect(px + 4, py + 1, 6, 5);
 
-    ctx.drawImage(sheet, sx, sy, SPR_W, SPR_H, dx, dy, SPR_W, SPR_H);
+    // t-shirt blanc
+    ctx.fillStyle = "#f2f2f2";
+    ctx.fillRect(px + 3, py + 6, 8, 6);
+
+    // jean
+    ctx.fillStyle = "#2b4f9b";
+    ctx.fillRect(px + 3, py + 12, 8, 4);
+
+    // chaussures
+    ctx.fillStyle = "#111";
+    ctx.fillRect(px + 3, py + 15, 3, 1);
+    ctx.fillRect(px + 8, py + 15, 3, 1);
+
+    // petite indication direction (pixel)
+    ctx.fillStyle = "#ffd24a";
+    if (player.facing === "up") ctx.fillRect(px + 6, py, 2, 1);
+    if (player.facing === "down") ctx.fillRect(px + 6, py + 16, 2, 1);
+    if (player.facing === "left") ctx.fillRect(px + 2, py + 8, 1, 2);
+    if (player.facing === "right") ctx.fillRect(px + 11, py + 8, 1, 2);
+  }
+
+  function drawDebugZones() {
+    // Pour ajuster deskZone facilement : mets à true si besoin
+    const DEBUG = false;
+    if (!DEBUG) return;
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = "red";
+    ctx.fillRect(deskZone.x, deskZone.y, deskZone.w, deskZone.h);
+    ctx.restore();
   }
 
   function render() {
+    // map
     if (mapImg.complete && mapImg.naturalWidth > 0) {
       ctx.drawImage(mapImg, 0, 0, canvas.width, canvas.height);
     } else {
-      ctx.fillStyle = "#222"; ctx.fillRect(0,0,canvas.width,canvas.height);
-      // petite grille de secours
-      ctx.globalAlpha = 0.08;
-      for (let x=0; x<canvas.width; x+=16) { ctx.fillStyle="#fff"; ctx.fillRect(x,0,1,canvas.height); }
-      for (let y=0; y<canvas.height; y+=16) { ctx.fillStyle="#fff"; ctx.fillRect(0,y,canvas.width,1); }
-      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#222";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    drawPlayerSprite();
+
+    drawDebugZones();
+    drawPlayer();
   }
 
   // ====== LOOP ======
@@ -451,16 +582,18 @@
     const dt = Math.min(0.033, (t - last) / 1000);
     last = t;
 
-    // reset input each frame
+    // reset inputs each frame
     input.up = input.down = input.left = input.right = false;
-    input.interact = false;
+    input.a = input.b = input.interact = false;
 
+    // read inputs
     readKeyboard();
     mergeInputs();
     readGamepad();
 
-    if (!dialogOpen) moveWithCollision(dt);
-    updateAnimation(dt);
+    if (!dialogOpen) {
+      moveWithCollision(dt);
+    }
     updateInteraction();
     render();
 
