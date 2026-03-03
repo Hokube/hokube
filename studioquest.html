@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Studio Quest HOKUBE</title>
+  <style>
+    :root { --ui: rgba(10,10,12,.72); --ui2: rgba(255,255,255,.10); --text: rgba(255,255,255,.92); }
+    html, body { margin:0; height:100%; background:#0b0b0e; color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; overflow:hidden; touch-action:none; }
+    #wrap { position:fixed; inset:0; display:grid; place-items:center; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    canvas { image-rendering:pixelated; image-rendering:crisp-edges; background:#111; border-radius:14px; box-shadow:0 10px 60px rgba(0,0,0,.5); max-width:100%; max-height:100%; }
+
+    #hud { position:fixed; inset:0; pointer-events:none; }
+    .panel { position:absolute; background:var(--ui); border:1px solid var(--ui2); border-radius:16px; padding:10px 12px; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+    #hint { left:12px; top:12px; font-size:13px; opacity:.9; line-height:1.25; max-width:min(560px, calc(100vw - 24px)); }
+    #prompt { left:50%; bottom:18px; transform:translateX(-50%); font-size:14px; opacity:0; transition:opacity 120ms ease; max-width:min(620px, calc(100vw - 24px)); }
+    #prompt.show { opacity:1; }
+
+    #touch { position:fixed; inset:0; pointer-events:none; }
+    .touch-zone { position:absolute; pointer-events:auto; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+
+    #dpad {
+      left:14px; bottom:14px; width:168px; height:168px;
+      background:var(--ui); border:1px solid var(--ui2); border-radius:22px;
+      display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+      gap:6px; padding:10px; box-sizing:border-box; touch-action:none;
+    }
+    .dkey {
+      border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
+      display:grid; place-items:center; color:rgba(255,255,255,.85); font-weight:700; font-size:16px;
+    }
+    .dkey:active,.dkey.active{ background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.25); }
+
+    #buttons { right:14px; bottom:14px; display:grid; grid-auto-flow:column; gap:12px; align-items:end; touch-action:none; }
+    .btn {
+      width:78px; height:78px; border-radius:999px; background:var(--ui); border:1px solid var(--ui2);
+      display:grid; place-items:center; font-weight:800; font-size:18px; letter-spacing:.5px;
+      color:rgba(255,255,255,.92); box-shadow:0 8px 26px rgba(0,0,0,.35);
+    }
+    .btn:active,.btn.active{ transform:translateY(1px); background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.25); }
+
+    #dialog { position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); padding:18px; box-sizing:border-box; }
+    #dialog.show { display:grid; }
+    .card {
+      width:min(540px,100%); background:rgba(18,18,22,.92); border:1px solid rgba(255,255,255,.14);
+      border-radius:18px; padding:16px; box-shadow:0 18px 70px rgba(0,0,0,.5);
+      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    }
+    .card h3 { margin:0 0 8px 0; font-size:18px; }
+    .card p { margin:0 0 14px 0; opacity:.92; line-height:1.35; }
+    .row { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+    .a {
+      appearance:none; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.95); padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer;
+    }
+    .a.primary{ background:rgba(120,170,255,.22); border-color:rgba(120,170,255,.35); }
+
+    @media (pointer:fine){ #touch{ opacity:0.0; } }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="game" width="480" height="270"></canvas>
+  </div>
+
+  <div id="hud">
+    <div id="hint" class="panel">
+      <div><b>Contrôles</b> : Flèches/WASD · <b>E</b> (interagir) · <b>Entrée</b> (valider)</div>
+      <div>Manette : stick gauche / d-pad · bouton <b>A</b> (Xbox) / <b>X</b> (PS) = interagir</div>
+    </div>
+    <div id="prompt" class="panel">Approche-toi du bureau pour interagir…</div>
+  </div>
+
+  <div id="touch">
+    <div id="dpad" class="touch-zone" aria-label="Direction">
+      <div></div><div class="dkey" data-dir="up">▲</div><div></div>
+      <div class="dkey" data-dir="left">◀</div><div></div><div class="dkey" data-dir="right">▶</div>
+      <div></div><div class="dkey" data-dir="down">▼</div><div></div>
+    </div>
+    <div id="buttons" class="touch-zone" aria-label="Boutons">
+      <div class="btn" id="btnB">B</div>
+      <div class="btn" id="btnA">A</div>
+    </div>
+  </div>
+
+  <div id="dialog" role="dialog" aria-modal="true">
+    <div class="card">
+      <h3>Matériel de musique</h3>
+      <p>Tu veux faire des beats ?</p>
+      <div class="row">
+        <button class="a" id="noBtn">Non</button>
+        <button class="a primary" id="yesBtn">Oui</button>
+      </div>
+      <p style="margin-top:10px; opacity:0.8; font-size:13px">
+        Astuce : sur mobile, appuie sur <b>A</b> pour interagir / valider.
+      </p>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ====== CONFIG ======
+  const MAP_IMAGE_URL = "studio-map.png"; // décor pixel-art SANS personnage
+  const REDIRECT_URL = "https://hokube.lu/synth2.html";
+
+  // Zone du bureau "matériel musique" (à ajuster selon ta map)
+  const deskZone = { x: 300, y: 50, w: 140, h: 90 };
+
+  // Collisions simples (rectangles). Ajuste si besoin.
+  const colliders = [
+    {x: -20, y: -20, w: 20, h: 1000},
+    {x: 480, y: -20, w: 20, h: 1000},
+    {x: -20, y: -20, w: 1000, h: 20},
+    {x: -20, y: 270, w: 1000, h: 20},
+
+    // obstacles approximatifs (à recaler à ta map)
+    {x: 25, y: 85, w: 170, h: 90},   // canapé
+    {x: 200, y: 30, w: 95, h: 140},  // étagère
+    {x: 330, y: 170, w: 140, h: 70}, // table droite
+    {x: deskZone.x, y: deskZone.y, w: deskZone.w, h: deskZone.h}, // bureau musique
+  ];
+
+  // ====== CANVAS / SCALE ======
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+
+  const wrap = document.getElementById("wrap");
+  function resizeCanvas() {
+    const baseW = 480, baseH = 270;
+    canvas.width = baseW; canvas.height = baseH;
+    const vw = wrap.clientWidth, vh = wrap.clientHeight;
+    const scale = Math.floor(Math.min(vw/baseW, vh/baseH)*1000)/1000;
+    canvas.style.width = Math.floor(baseW*scale) + "px";
+    canvas.style.height = Math.floor(baseH*scale) + "px";
+  }
+  addEventListener("resize", resizeCanvas, {passive:true});
+  resizeCanvas();
+
+  // ====== LOAD MAP ======
+  const mapImg = new Image();
+  mapImg.src = MAP_IMAGE_URL;
+  mapImg.onload = () => {};
+  mapImg.onerror = () => console.warn("Map introuvable. Mets un 'studio-map.png' (décor sans perso) dans le même dossier.");
+
+  // ====== SPRITE SHEET (généré en code) ======
+  // 4 directions x 3 frames (gauche, idle, droite)
+  // Layout: rows = [down, left, right, up], cols = [step1, idle, step2]
+  const SPR_W = 16, SPR_H = 24;
+  const sheet = document.createElement("canvas");
+  sheet.width = SPR_W * 3;
+  sheet.height = SPR_H * 4;
+  const sctx = sheet.getContext("2d");
+  sctx.imageSmoothingEnabled = false;
+
+  function px(x,y,w,h,c){ sctx.fillStyle=c; sctx.fillRect(x,y,w,h); }
+
+  function drawFrame(row, col, pose) {
+    // origin
+    const ox = col * SPR_W;
+    const oy = row * SPR_H;
+
+    // clear
+    sctx.clearRect(ox, oy, SPR_W, SPR_H);
+
+    // palette (simple)
+    const skin = "#3b2a1f";
+    const shirt = "#f3f3f3";
+    const jean = "#2b4f9b";
+    const shoe = "#0f0f12";
+    const outline = "#121216";
+    const hair = "#0f0f12";
+
+    // step offset for walking
+    const step = (pose === "step1") ? -1 : (pose === "step2" ? 1 : 0);
+
+    // shadow
+    sctx.globalAlpha = 0.35;
+    px(ox+4, oy+20, 8, 2, "#000");
+    sctx.globalAlpha = 1;
+
+    // outline body block (ALTTP-ish chunky)
+    // head
+    px(ox+5, oy+3, 6, 6, outline);
+    px(ox+6, oy+4, 4, 4, skin);
+    px(ox+6, oy+3, 4, 1, hair); // hairline
+    px(ox+5, oy+4, 1, 3, hair); // side
+    px(ox+10, oy+4, 1, 3, hair);
+
+    // torso outline
+    px(ox+4, oy+9, 8, 8, outline);
+    px(ox+5, oy+10, 6, 6, shirt);
+
+    // arms (tiny)
+    px(ox+3, oy+10, 2, 5, outline);
+    px(ox+11, oy+10, 2, 5, outline);
+
+    // pants outline
+    px(ox+4, oy+17, 8, 4, outline);
+    px(ox+5, oy+18, 6, 2, jean);
+
+    // legs + shoes with walking variation
+    // left leg
+    px(ox+5+step, oy+20, 3, 2, jean);
+    px(ox+5+step, oy+22, 3, 1, shoe);
+    // right leg
+    px(ox+8-step, oy+20, 3, 2, jean);
+    px(ox+8-step, oy+22, 3, 1, shoe);
+
+    // direction hint (face)
+    if (row === 3) { // up: hair more visible, face less
+      px(ox+6, oy+4, 4, 1, hair);
+      px(ox+6, oy+6, 4, 1, hair);
+    } else if (row === 0) { // down: eyes
+      px(ox+7, oy+6, 1, 1, "#000");
+      px(ox+9, oy+6, 1, 1, "#000");
+    } else if (row === 1) { // left: one eye
+      px(ox+7, oy+6, 1, 1, "#000");
+    } else if (row === 2) { // right: one eye
+      px(ox+9, oy+6, 1, 1, "#000");
+    }
+  }
+
+  // build sheet
+  const ROW = { down:0, left:1, right:2, up:3 };
+  const COL = { step1:0, idle:1, step2:2 };
+  for (const [dir, r] of Object.entries(ROW)) {
+    drawFrame(r, COL.step1, "step1");
+    drawFrame(r, COL.idle, "idle");
+    drawFrame(r, COL.step2, "step2");
+  }
+
+  // ====== PLAYER ======
+  const player = {
+    x: 240, y: 160,
+    w: 12, h: 16,          // hitbox
+    speed: 90,
+    facing: "down",
+    animTime: 0,
+    animFrame: 1,          // 0,1,2 (col)
+    moving: false,
+  };
+
+  // ====== INPUT ======
+  const keys = new Set();
+  const input = { up:false, down:false, left:false, right:false, interact:false };
+
+  addEventListener("keydown", (e) => {
+    keys.add(e.code);
+    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","Enter"].includes(e.code)) e.preventDefault();
+  }, {passive:false});
+  addEventListener("keyup", (e) => keys.delete(e.code), {passive:true});
+
+  function readKeyboard() {
+    input.up = keys.has("ArrowUp") || keys.has("KeyW");
+    input.down = keys.has("ArrowDown") || keys.has("KeyS");
+    input.left = keys.has("ArrowLeft") || keys.has("KeyA");
+    input.right = keys.has("ArrowRight") || keys.has("KeyD");
+    input.interact = keys.has("KeyE") || keys.has("Enter");
+  }
+
+  // Touch
+  const dpad = document.getElementById("dpad");
+  const dkeys = [...dpad.querySelectorAll(".dkey")];
+  const touchState = { up:false, down:false, left:false, right:false, a:false };
+
+  function setDir(dir, pressed) {
+    touchState[dir] = pressed;
+    dkeys.forEach(k => k.classList.toggle("active", k.dataset.dir === dir && pressed));
+    // allow multi-press feel
+    dkeys.forEach(k => {
+      if (k.dataset.dir === dir) k.classList.toggle("active", pressed);
+    });
+  }
+  dkeys.forEach(k => {
+    const dir = k.dataset.dir;
+    const start = (e) => { e.preventDefault(); setDir(dir, true); };
+    const end = (e) => { e.preventDefault(); setDir(dir, false); };
+    k.addEventListener("pointerdown", start);
+    k.addEventListener("pointerup", end);
+    k.addEventListener("pointercancel", end);
+    k.addEventListener("pointerleave", end);
+  });
+
+  const btnA = document.getElementById("btnA");
+  const btnB = document.getElementById("btnB");
+  function bindButton(el, name) {
+    const down = (e) => { e.preventDefault(); touchState[name] = true; el.classList.add("active"); };
+    const up = (e) => { e.preventDefault(); touchState[name] = false; el.classList.remove("active"); };
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    el.addEventListener("pointerleave", up);
+  }
+  bindButton(btnA, "a");
+  bindButton(btnB, "b");
+
+  function mergeInputs() {
+    input.up ||= touchState.up;
+    input.down ||= touchState.down;
+    input.left ||= touchState.left;
+    input.right ||= touchState.right;
+    // A = interagir
+    input.interact ||= touchState.a;
+  }
+
+  // Gamepad
+  function readGamepad() {
+    const pads = navigator.getGamepads?.() || [];
+    const gp = pads.find(p => p && p.connected);
+    if (!gp) return;
+    const axX = gp.axes?.[0] ?? 0;
+    const axY = gp.axes?.[1] ?? 0;
+    const dead = 0.25;
+
+    const gpLeft = (axX < -dead) || gp.buttons?.[14]?.pressed;
+    const gpRight = (axX > dead) || gp.buttons?.[15]?.pressed;
+    const gpUp = (axY < -dead) || gp.buttons?.[12]?.pressed;
+    const gpDown = (axY > dead) || gp.buttons?.[13]?.pressed;
+
+    input.left ||= gpLeft;
+    input.right ||= gpRight;
+    input.up ||= gpUp;
+    input.down ||= gpDown;
+
+    const btn0 = gp.buttons?.[0]?.pressed; // A (Xbox)
+    input.interact ||= !!btn0;
+  }
+
+  // ====== COLLISION ======
+  function rectsOverlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function moveWithCollision(dt) {
+    const speed = player.speed;
+    let vx = 0, vy = 0;
+    if (input.left) vx -= speed;
+    if (input.right) vx += speed;
+    if (input.up) vy -= speed;
+    if (input.down) vy += speed;
+
+    player.moving = (vx !== 0 || vy !== 0);
+
+    if (vx !== 0 && vy !== 0) {
+      const inv = 1 / Math.sqrt(2);
+      vx *= inv; vy *= inv;
+    }
+
+    // facing
+    if (Math.abs(vx) > Math.abs(vy)) {
+      if (vx > 0) player.facing = "right";
+      if (vx < 0) player.facing = "left";
+    } else if (vy !== 0) {
+      if (vy > 0) player.facing = "down";
+      if (vy < 0) player.facing = "up";
+    }
+
+    // move X
+    const nextX = { x: player.x + vx * dt, y: player.y, w: player.w, h: player.h };
+    if (!colliders.some(c => rectsOverlap(nextX, c))) player.x = nextX.x;
+
+    // move Y
+    const nextY = { x: player.x, y: player.y + vy * dt, w: player.w, h: player.h };
+    if (!colliders.some(c => rectsOverlap(nextY, c))) player.y = nextY.y;
+  }
+
+  // ====== ANIMATION ======
+  function updateAnimation(dt) {
+    // animation walking: 0-1-2-1...
+    if (player.moving) {
+      player.animTime += dt;
+      const speed = 10; // frames/sec-ish influence
+      const phase = Math.floor(player.animTime * speed) % 4;
+      player.animFrame = [0,1,2,1][phase];
+    } else {
+      player.animTime = 0;
+      player.animFrame = 1; // idle = col 1
+    }
+  }
+
+  // ====== INTERACTION ======
+  const prompt = document.getElementById("prompt");
+  const dialog = document.getElementById("dialog");
+  const yesBtn = document.getElementById("yesBtn");
+  const noBtn = document.getElementById("noBtn");
+
+  let nearDesk = false;
+  let interactLatch = false;
+  let dialogOpen = false;
+
+  function updateInteraction() {
+    const pRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+    const interactZone = { x: deskZone.x - 14, y: deskZone.y + deskZone.h - 4, w: deskZone.w + 28, h: 50 };
+    nearDesk = rectsOverlap(pRect, interactZone);
+    prompt.classList.toggle("show", nearDesk && !dialogOpen);
+
+    const wants = input.interact;
+    if (wants && !interactLatch) {
+      interactLatch = true;
+      if (nearDesk && !dialogOpen) openDialog();
+      else if (dialogOpen) goYes();
+    }
+    if (!wants) interactLatch = false;
+  }
+
+  function openDialog() { dialogOpen = true; dialog.classList.add("show"); }
+  function closeDialog(){ dialogOpen = false; dialog.classList.remove("show"); }
+  function goYes(){ location.href = REDIRECT_URL; }
+
+  yesBtn.addEventListener("click", goYes);
+  noBtn.addEventListener("click", closeDialog);
+  addEventListener("keydown", (e) => {
+    if (e.code === "Escape" && dialogOpen) { e.preventDefault(); closeDialog(); }
+  }, {passive:false});
+
+  // ====== RENDER ======
+  function drawPlayerSprite() {
+    const row = (player.facing === "down") ? 0 :
+                (player.facing === "left") ? 1 :
+                (player.facing === "right") ? 2 : 3;
+    const col = player.animFrame;
+
+    // Place sprite so feet align with hitbox bottom (ALTTP vibe)
+    const dx = Math.round(player.x - 2);
+    const dy = Math.round(player.y - 8);
+
+    const sx = col * SPR_W;
+    const sy = row * SPR_H;
+
+    ctx.drawImage(sheet, sx, sy, SPR_W, SPR_H, dx, dy, SPR_W, SPR_H);
+  }
+
+  function render() {
+    if (mapImg.complete && mapImg.naturalWidth > 0) {
+      ctx.drawImage(mapImg, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = "#222"; ctx.fillRect(0,0,canvas.width,canvas.height);
+      // petite grille de secours
+      ctx.globalAlpha = 0.08;
+      for (let x=0; x<canvas.width; x+=16) { ctx.fillStyle="#fff"; ctx.fillRect(x,0,1,canvas.height); }
+      for (let y=0; y<canvas.height; y+=16) { ctx.fillStyle="#fff"; ctx.fillRect(0,y,canvas.width,1); }
+      ctx.globalAlpha = 1;
+    }
+    drawPlayerSprite();
+  }
+
+  // ====== LOOP ======
+  let last = performance.now();
+  function loop(t) {
+    const dt = Math.min(0.033, (t - last) / 1000);
+    last = t;
+
+    // reset input each frame
+    input.up = input.down = input.left = input.right = false;
+    input.interact = false;
+
+    readKeyboard();
+    mergeInputs();
+    readGamepad();
+
+    if (!dialogOpen) moveWithCollision(dt);
+    updateAnimation(dt);
+    updateInteraction();
+    render();
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
