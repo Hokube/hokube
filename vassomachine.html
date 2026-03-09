@@ -283,7 +283,17 @@
             position: relative;
             background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
             overflow: auto;
-            padding: 2rem;
+            padding: 1rem;
+            display: grid;
+            align-content: start;
+        }
+
+        #piecesContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: grid;
+            gap: 0;
         }
 
         .reference-image {
@@ -522,8 +532,7 @@
                     <img id="referenceImg" src="" alt="Reference">
                 </div>
 
-                <!-- PUZZLE CANVAS -->
-                <div class="puzzle-canvas" id="puzzleCanvas"></div>
+                <!-- PUZZLE CANVAS - REMOVED, using pieces directly -->
 
                 <!-- PUZZLE PIECES CONTAINER -->
                 <div id="piecesContainer"></div>
@@ -647,23 +656,6 @@
 
             generatePuzzlePieces(settings.cols, settings.rows);
             
-            // Adapt canvas size to puzzle - augmenter la taille
-            const canvas = document.getElementById('puzzleCanvas');
-            const pieceWidth = 600 / settings.cols;
-            const pieceHeight = 600 / settings.rows;
-            const totalWidth = pieceWidth * settings.cols;
-            const totalHeight = pieceHeight * settings.rows;
-            
-            // Ajouter du padding pour éviter le chevauchement
-            const paddingRatio = 1.1;
-            const newWidth = totalWidth * paddingRatio;
-            const newHeight = totalHeight * paddingRatio;
-            
-            canvas.style.width = newWidth + 'px';
-            canvas.style.height = newHeight + 'px';
-            canvas.style.maxWidth = '95vw';
-            canvas.style.maxHeight = '95vh';
-            
             renderPieces();
         }
 
@@ -704,10 +696,15 @@
         }
 
         function renderPieces() {
-            const canvas = document.getElementById('puzzleCanvas');
-            canvas.innerHTML = '';
+            const container = document.getElementById('piecesContainer');
+            container.innerHTML = '';
             
-            // Render all pieces on the canvas aligned to grid
+            // Calculate grid columns based on piece size
+            const avgPieceWidth = 600 / 10; // approximate
+            const containerWidth = window.innerWidth;
+            const cols = Math.max(2, Math.floor(containerWidth / avgPieceWidth));
+            
+            // Render all pieces directly in the container
             pieces.forEach(piece => {
                 const div = document.createElement('div');
                 const isInCorrectPosition = piece.currentRow === piece.correctRow && 
@@ -732,7 +729,7 @@
                 // Use pointerdown for best mobile compatibility
                 div.addEventListener('pointerdown', handleInteraction, { passive: false });
                 
-                canvas.appendChild(div);
+                container.appendChild(div);
             });
         }
 
