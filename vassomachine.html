@@ -72,7 +72,7 @@
 
         .grid-3 {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
         }
 
@@ -367,6 +367,10 @@
                 <div class="section">
                     <div class="section-label">Choose Difficulty</div>
                     <div class="grid-3">
+                        <button class="button-option" data-difficulty="50">
+                            <div class="option-title">50 Pieces</div>
+                            <div class="option-subtitle">Lunch Break</div>
+                        </button>
                         <button class="button-option" data-difficulty="100">
                             <div class="option-title">100 Pieces</div>
                             <div class="option-subtitle">Easy</div>
@@ -505,6 +509,7 @@
         }
 
         const difficultySettings = {
+            50: { cols: 10, rows: 5 },
             100: { cols: 10, rows: 10 },
             400: { cols: 20, rows: 20 },
             900: { cols: 30, rows: 30 }
@@ -669,19 +674,35 @@
                 piece.x = moveE.clientX - startX;
                 piece.y = moveE.clientY - startY;
                 
-                // Magnetic snap while dragging
+                // Magnetic snap only if piece is within canvas area
                 const canvas = document.getElementById('puzzleCanvas');
                 const canvasRect = canvas.getBoundingClientRect();
-                const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
-                const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
-                const magneticThreshold = 80;
+                const pieceRect = {
+                    left: piece.x,
+                    top: piece.y,
+                    right: piece.x + piece.pieceWidth,
+                    bottom: piece.y + piece.pieceHeight
+                };
                 
-                // Snap to grid if close enough
-                if (Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < magneticThreshold) {
-                    piece.x = correctX - canvasRect.left;
-                }
-                if (Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < magneticThreshold) {
-                    piece.y = correctY - canvasRect.top;
+                // Check if piece is within the canvas bounds
+                const isWithinCanvas = 
+                    pieceRect.right > canvasRect.left &&
+                    pieceRect.left < canvasRect.right &&
+                    pieceRect.bottom > canvasRect.top &&
+                    pieceRect.top < canvasRect.bottom;
+                
+                if (isWithinCanvas) {
+                    const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
+                    const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
+                    const magneticThreshold = 80;
+                    
+                    // Snap to grid if close enough
+                    if (Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < magneticThreshold) {
+                        piece.x = correctX - canvasRect.left;
+                    }
+                    if (Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < magneticThreshold) {
+                        piece.y = correctY - canvasRect.top;
+                    }
                 }
                 
                 renderPieces();
