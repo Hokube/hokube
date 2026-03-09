@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vasso's Puzzle Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom right, #f8fafc, #f1f5f9);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* MENU STATE */
+        .menu-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .menu-content {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .grid-3-themes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .button-option {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .button-option:hover {
+            border-color: #cbd5e1;
+        }
+
+        .button-option.selected {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+
+        .button-option.selected .option-title {
+            color: #f97316;
+        }
+
+        .option-title {
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .option-subtitle {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .theme-button {
+            padding: 1rem;
+            font-size: 0.875rem;
+            text-transform: capitalize;
+        }
+
+        .start-button {
+            width: 100%;
+            padding: 1rem;
+            background: #f97316;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .start-button:hover:not(:disabled) {
+            background: #ea580c;
+        }
+
+        .start-button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        /* PLAYING STATE */
+        .playing-state {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-bar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: #1e293b;
+        }
+
+        .progress-section {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .progress-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .progress-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .progress-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: #f97316;
+        }
+
+        .progress-bar {
+            width: 128px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #f97316;
+            transition: width 0.3s;
+        }
+
+        .quit-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: #f1f5f9;
+            border: none;
+            color: #475569;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quit-button:hover {
+            background: #e2e8f0;
+        }
+
+        .game-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(to bottom right, #f1f5f9, #f8fafc);
+            overflow: auto;
+        }
+
+        .reference-image {
+            position: fixed;
+            top: 5rem;
+            right: 1rem;
+            width: 150px;
+            height: 150px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 4px solid white;
+            z-index: 100;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reference-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .puzzle-canvas {
+            position: fixed;
+            top: 8rem;
+            left: 3rem;
+            width: 500px;
+            height: 400px;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border: 4px solid white;
+            overflow: hidden;
+            z-index: 3;
+        }
+
+        .puzzle-piece {
+            position: absolute;
+            cursor: grab;
+            background-size: 600px 600px;
+            background-repeat: no-repeat;
+            border-radius: 2px;
+            user-select: none;
+            transition: box-shadow 0.1s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+
+        .puzzle-piece:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            filter: brightness(1.05);
+        }
+
+        .puzzle-piece.selected {
+            box-shadow: 0 0 0 3px #f97316, 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .puzzle-piece.placed {
+            cursor: default;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #piecesContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #piecesContainer .puzzle-piece {
+            pointer-events: auto;
+        }
+
+        /* COMPLETED STATE */
+        .completed-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            background: linear-gradient(to bottom right, #dcfce7, #bbf7d0);
+        }
+
+        .completed-content {
+            text-align: center;
+        }
+
+        .completed-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: #16a34a;
+            margin-bottom: 1rem;
+        }
+
+        .completed-message {
+            font-size: 1.25rem;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+
+        .replay-button {
+            padding: 0.75rem 2rem;
+            background: #f97316;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .replay-button:hover {
+            background: #ea580c;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- MENU STATE -->
+        <div class="menu-state" id="menuState">
+            <div class="menu-content">
+                <h1 class="title">Vasso's Puzzle Generator</h1>
+                <p class="subtitle">Assemblez des puzzles magnifiques avec des images libres de droit</p>
+
+                <!-- DIFFICULTY SELECTION -->
+                <div class="section">
+                    <div class="section-label">Choisir la difficulté</div>
+                    <div class="grid-3">
+                        <button class="button-option" data-difficulty="100">
+                            <div class="option-title">100 pièces</div>
+                            <div class="option-subtitle">Facile</div>
+                        </button>
+                        <button class="button-option" data-difficulty="400">
+                            <div class="option-title">400 pièces</div>
+                            <div class="option-subtitle">Moyen</div>
+                        </button>
+                        <button class="button-option" data-difficulty="900">
+                            <div class="option-title">900 pièces</div>
+                            <div class="option-subtitle">Difficile</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- THEME SELECTION -->
+                <div class="section">
+                    <div class="section-label">Choisir le thème</div>
+                    <div class="grid-3-themes">
+                        <button class="button-option theme-button" data-theme="nature">Nature</button>
+                        <button class="button-option theme-button" data-theme="city">Ville</button>
+                        <button class="button-option theme-button" data-theme="animals">Animaux</button>
+                        <button class="button-option theme-button" data-theme="food">Nourriture</button>
+                        <button class="button-option theme-button" data-theme="mountains">Montagnes</button>
+                        <button class="button-option theme-button" data-theme="sunset">Coucher de soleil</button>
+                    </div>
+                </div>
+
+                <!-- START BUTTON -->
+                <button class="start-button" id="startButton" disabled>Démarrer le jeu</button>
+            </div>
+        </div>
+
+        <!-- PLAYING STATE -->
+        <div class="playing-state hidden" id="playingState">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="top-bar-title">Vasso's Puzzle Generator</div>
+                <div class="progress-section">
+                    <div class="progress-text">
+                        <div class="progress-label">Progression</div>
+                        <div class="progress-number" id="progressNumber">0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <button class="quit-button" id="quitButton">Quitter</button>
+                </div>
+            </div>
+
+            <!-- GAME AREA -->
+            <div class="game-area">
+                <!-- REFERENCE IMAGE -->
+                <div class="reference-image" id="referenceImage">
+                    <img id="referenceImg" src="" alt="Reference">
+                </div>
+
+                <!-- PUZZLE CANVAS -->
+                <div class="puzzle-canvas" id="puzzleCanvas"></div>
+
+                <!-- PUZZLE PIECES CONTAINER -->
+                <div id="piecesContainer"></div>
+            </div>
+        </div>
+
+        <!-- COMPLETED STATE -->
+        <div class="completed-state hidden" id="completedState">
+            <div class="completed-content">
+                <h1 class="completed-title">Félicitations! 🎉</h1>
+                <p class="completed-message">Vous avez complété le puzzle avec succès!</p>
+                <button class="replay-button" id="replayButton">Jouer à nouveau</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = 'menu';
+        let selectedDifficulty = null;
+        let selectedTheme = null;
+        let currentImageUrl = null;
+        let pieces = [];
+        let placedPieces = new Set();
+        let selectedPiece = null;
+        let draggedPiece = null;
+
+        // Vraies photos libres de droit d'Unsplash
+        const imageLibrary = {
+            nature: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
+            city: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=600&h=600&fit=crop&crop=center',
+            animals: 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=600&h=600&fit=crop&crop=center',
+            food: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=600&h=600&fit=crop&crop=center',
+            mountains: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
+            sunset: 'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=600&h=600&fit=crop&crop=center'
+        };
+
+        const difficultySettings = {
+            100: { cols: 10, rows: 10 },
+            400: { cols: 20, rows: 20 },
+            900: { cols: 30, rows: 30 }
+        };
+
+        // Menu event listeners
+        document.querySelectorAll('[data-difficulty]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-difficulty]').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedDifficulty = parseInt(btn.dataset.difficulty);
+                updateStartButton();
+            });
+        });
+
+        document.querySelectorAll('[data-theme]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-theme]').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedTheme = btn.dataset.theme;
+                updateStartButton();
+            });
+        });
+
+        function updateStartButton() {
+            const startBtn = document.getElementById('startButton');
+            startBtn.disabled = !selectedDifficulty || !selectedTheme;
+        }
+
+        document.getElementById('startButton').addEventListener('click', startGame);
+
+        function startGame() {
+            currentImageUrl = imageLibrary[selectedTheme];
+            const settings = difficultySettings[selectedDifficulty];
+            
+            // Hide menu, show playing state
+            document.getElementById('menuState').classList.add('hidden');
+            document.getElementById('playingState').classList.remove('hidden');
+            gameState = 'playing';
+
+            // Set reference image
+            document.getElementById('referenceImg').src = currentImageUrl;
+
+            // Generate pieces
+            generatePuzzlePieces(settings.cols, settings.rows);
+            
+            // Render pieces
+            renderPieces();
+        }
+
+        function generatePuzzlePieces(cols, rows) {
+            pieces = [];
+            const pieceWidth = 600 / cols;
+            const pieceHeight = 600 / rows;
+
+            let xOffset = 700;
+            let yOffset = 100;
+            let currentY = yOffset;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    pieces.push({
+                        id: row * cols + col,
+                        row,
+                        col,
+                        x: xOffset,
+                        y: currentY,
+                        sourceX: col * pieceWidth,
+                        sourceY: row * pieceHeight,
+                        pieceWidth,
+                        pieceHeight,
+                        placed: false
+                    });
+
+                    // Disposition en grille des pièces
+                    xOffset += pieceWidth + 3;
+                    if (xOffset > window.innerWidth - 50) {
+                        xOffset = 700;
+                        currentY += pieceHeight + 3;
+                    }
+                }
+            }
+
+            placedPieces = new Set();
+        }
+
+        function renderPieces() {
+            const container = document.getElementById('piecesContainer');
+            container.innerHTML = '';
+
+            pieces.forEach(piece => {
+                if (!placedPieces.has(piece.id)) {
+                    const div = document.createElement('div');
+                    div.className = `puzzle-piece ${selectedPiece === piece.id ? 'selected' : ''}`;
+                    div.style.left = piece.x + 'px';
+                    div.style.top = piece.y + 'px';
+                    div.style.width = piece.pieceWidth + 'px';
+                    div.style.height = piece.pieceHeight + 'px';
+                    div.style.backgroundImage = `url('${currentImageUrl}')`;
+                    div.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
+                    
+                    div.addEventListener('mousedown', (e) => startDragPiece(e, piece.id));
+                    div.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectPiece(piece.id);
+                    });
+                    
+                    container.appendChild(div);
+                }
+            });
+
+            // Render placed pieces in canvas
+            const canvas = document.getElementById('puzzleCanvas');
+            const existingPieces = canvas.querySelectorAll('[data-piece-id]');
+            const placedIds = new Set();
+            
+            pieces.forEach(piece => {
+                if (placedPieces.has(piece.id)) {
+                    placedIds.add(piece.id);
+                    
+                    let pieceDiv = canvas.querySelector(`[data-piece-id="${piece.id}"]`);
+                    if (!pieceDiv) {
+                        pieceDiv = document.createElement('div');
+                        pieceDiv.className = 'puzzle-piece placed';
+                        pieceDiv.setAttribute('data-piece-id', piece.id);
+                        canvas.appendChild(pieceDiv);
+                    }
+                    
+                    pieceDiv.style.position = 'absolute';
+                    pieceDiv.style.left = (piece.col * piece.pieceWidth) + 'px';
+                    pieceDiv.style.top = (piece.row * piece.pieceHeight) + 'px';
+                    pieceDiv.style.width = piece.pieceWidth + 'px';
+                    pieceDiv.style.height = piece.pieceHeight + 'px';
+                    pieceDiv.style.backgroundImage = `url('${currentImageUrl}')`;
+                    pieceDiv.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
+                }
+            });
+            
+            // Remove pieces that are no longer placed
+            existingPieces.forEach(div => {
+                if (!placedIds.has(parseInt(div.getAttribute('data-piece-id')))) {
+                    div.remove();
+                }
+            });
+        }
+
+        function selectPiece(pieceId) {
+            selectedPiece = selectedPiece === pieceId ? null : pieceId;
+            renderPieces();
+        }
+
+        function startDragPiece(e, pieceId) {
+            if (placedPieces.has(pieceId)) return;
+
+            const piece = pieces.find(p => p.id === pieceId);
+            const startX = e.clientX - piece.x;
+            const startY = e.clientY - piece.y;
+
+            draggedPiece = pieceId;
+
+            function handleMouseMove(moveE) {
+                piece.x = moveE.clientX - startX;
+                piece.y = moveE.clientY - startY;
+                renderPieces();
+            }
+
+            function handleMouseUp() {
+                draggedPiece = null;
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+
+                // Check if piece is in correct position
+                const canvas = document.getElementById('puzzleCanvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
+                const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
+
+                if (
+                    Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < 50 &&
+                    Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < 50
+                ) {
+                    placePiece(pieceId);
+                } else {
+                    renderPieces();
+                }
+            }
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function placePiece(pieceId) {
+            placedPieces.add(pieceId);
+            const piece = pieces.find(p => p.id === pieceId);
+            piece.placed = true;
+
+            updateProgress();
+            renderPieces();
+        }
+
+        function updateProgress() {
+            const progress = Math.round((placedPieces.size / pieces.length) * 100);
+            document.getElementById('progressNumber').textContent = progress + '%';
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            if (placedPieces.size === pieces.length) {
+                setTimeout(() => completeGame(), 500);
+            }
+        }
+
+        function completeGame() {
+            gameState = 'completed';
+            document.getElementById('playingState').classList.add('hidden');
+            document.getElementById('completedState').classList.remove('hidden');
+        }
+
+        document.getElementById('quitButton').addEventListener('click', () => {
+            document.getElementById('playingState').classList.add('hidden');
+            document.getElementById('menuState').classList.remove('hidden');
+            selectedDifficulty = null;
+            selectedTheme = null;
+            selectedPiece = null;
+            document.querySelectorAll('[data-difficulty]').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('[data-theme]').forEach(b => b.classList.remove('selected'));
+            updateStartButton();
+        });
+
+        document.getElementById('replayButton').addEventListener('click', () => {
+            document.getElementById('completedState').classList.add('hidden');
+            document.getElementById('menuState').classList.remove('hidden');
+            selectedDifficulty = null;
+            selectedTheme = null;
+            selectedPiece = null;
+            document.querySelectorAll('[data-difficulty]').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('[data-theme]').forEach(b => b.classList.remove('selected'));
+            updateStartButton();
+        });
+    </script>
+</body>
+</html>
