@@ -325,7 +325,7 @@
 
         .puzzle-piece {
             position: absolute;
-            cursor: grab;
+            cursor: pointer;
             background-size: 600px 600px;
             background-repeat: no-repeat;
             border-radius: 2px;
@@ -537,7 +537,7 @@
         let pieces = [];
         let placedPieces = new Set();
         let selectedPiece = null;
-        let draggedPiece = null;
+        let selectedGridSlot = null;
 
         // Image library with multiple images per theme
         const imageLibrary = {
@@ -688,10 +688,9 @@
                     div.style.backgroundImage = `url('${currentImageUrl}')`;
                     div.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
                     
-                    div.addEventListener('mousedown', (e) => startDragPiece(e, piece.id));
                     div.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        selectPiece(piece.id);
+                        selectLoosePiece(piece.id);
                     });
                     
                     container.appendChild(div);
@@ -711,6 +710,8 @@
                         pieceDiv = document.createElement('div');
                         pieceDiv.className = 'puzzle-piece placed';
                         pieceDiv.setAttribute('data-piece-id', piece.id);
+                        pieceDiv.setAttribute('data-row', piece.row);
+                        pieceDiv.setAttribute('data-col', piece.col);
                         canvas.appendChild(pieceDiv);
                     }
                     
@@ -721,6 +722,13 @@
                     pieceDiv.style.height = piece.pieceHeight + 'px';
                     pieceDiv.style.backgroundImage = `url('${currentImageUrl}')`;
                     pieceDiv.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
+                    
+                    // Add click handler for placed pieces
+                    pieceDiv.style.cursor = 'pointer';
+                    pieceDiv.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectGridSlot(piece.row, piece.col, piece.id);
+                    });
                 }
             });
             
@@ -731,83 +739,55 @@
             });
         }
 
-        function selectPiece(pieceId) {
-            selectedPiece = selectedPiece === pieceId ? null : pieceId;
+        function selectLoosePiece(pieceId) {
+            if (selectedPiece === pieceId) {
+                selectedPiece = null;
+                selectedGridSlot = null;
+            } else {
+                selectedPiece = pieceId;
+                selectedGridSlot = null;
+                // If a grid slot is already selected, try to place
+                if (selectedGridSlot !== null) {
+                    swapPieces(pieceId, selectedGridSlot);
+                    selectedPiece = null;
+                    selectedGridSlot = null;
+                }
+            }
             renderPieces();
         }
 
-        function startDragPiece(e, pieceId) {
-            if (placedPieces.has(pieceId)) return;
-
-            const piece = pieces.find(p => p.id === pieceId);
-            const startX = e.clientX - piece.x;
-            const startY = e.clientY - piece.y;
-
-            draggedPiece = pieceId;
-
-            function handleMouseMove(moveE) {
-                piece.x = moveE.clientX - startX;
-                piece.y = moveE.clientY - startY;
-                
-                // Improved magnetic snap
-                const canvas = document.getElementById('puzzleCanvas');
-                const canvasRect = canvas.getBoundingClientRect();
-                const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
-                const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
-                const magneticThreshold = 60;
-                
-                // Check if piece is within canvas area
-                const isWithinCanvas = 
-                    piece.x + piece.pieceWidth > canvasRect.left &&
-                    piece.x < canvasRect.right &&
-                    piece.y + piece.pieceHeight > canvasRect.top &&
-                    piece.y < canvasRect.bottom;
-                
-                if (isWithinCanvas) {
-                    // Snap horizontally
-                    if (Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < magneticThreshold) {
-                        piece.x = correctX - canvasRect.left;
-                    }
-                    // Snap vertically
-                    if (Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < magneticThreshold) {
-                        piece.y = correctY - canvasRect.top;
-                    }
-                }
-                
-                renderPieces();
+        function selectGridSlot(row, col, placedPieceId) {
+            if (selectedPiece === null) {
+                // No piece selected, just select this slot
+                selectedGridSlot = { row, col, pieceId: placedPieceId };
+                return;
             }
-
-            function handleMouseUp() {
-                draggedPiece = null;
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
-
-                // Final snap check
-                const canvas = document.getElementById('puzzleCanvas');
-                const canvasRect = canvas.getBoundingClientRect();
-                const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
-                const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
-                const snapThreshold = 40;
-
-                if (
-                    Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < snapThreshold &&
-                    Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < snapThreshold
-                ) {
-                    placePiece(pieceId);
-                } else {
-                    renderPieces();
-                }
-            }
-
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
+            
+            // Swap with selected loose piece
+            swapPieces(selectedPiece, { row, col, pieceId: placedPieceId });
+            selectedPiece = null;
+            selectedGridSlot = null;
+            renderPieces();
         }
 
-        function placePiece(pieceId) {
-            placedPieces.add(pieceId);
-            const piece = pieces.find(p => p.id === pieceId);
-            piece.placed = true;
-
+        function swapPieces(loosePieceId, gridSlot) {
+            const loosePiece = pieces.find(p => p.id === loosePieceId);
+            const placedPiece = pieces.find(p => p.row === gridSlot.row && p.col === gridSlot.col && placedPieces.has(p.id));
+            
+            if (!loosePiece) return;
+            
+            // Place the loose piece in the grid
+            loosePiece.row = gridSlot.row;
+            loosePiece.col = gridSlot.col;
+            placedPieces.add(loosePieceId);
+            
+            // Move the placed piece (if exists) to loose pieces area
+            if (placedPiece) {
+                placedPieces.delete(gridSlot.pieceId);
+                placedPiece.x = loosePiece.x || 50;
+                placedPiece.y = loosePiece.y || 50;
+            }
+            
             updateProgress();
             renderPieces();
         }
