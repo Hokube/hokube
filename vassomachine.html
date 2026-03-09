@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vasso's Puzzle Machine</title>
+    <title>Vasso's Puzzle Generator</title>
     <style>
         * {
             margin: 0;
@@ -453,15 +453,56 @@
         let selectedPiece = null;
         let draggedPiece = null;
 
-        // Image library with direct URLs
+        // Image library with multiple images per theme
         const imageLibrary = {
-            nature: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
-            city: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=600&h=600&fit=crop&crop=center',
-            animals: 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=600&h=600&fit=crop&crop=center',
-            food: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=600&h=600&fit=crop&crop=center',
-            mountains: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
-            sunset: 'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=600&h=600&fit=crop&crop=center'
+            nature: [
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=600&h=600&fit=crop&crop=center'
+            ],
+            city: [
+                'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=600&fit=crop&crop=center'
+            ],
+            animals: [
+                'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1456028168606-83891df592c3?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1431904582262-38ea7434fb36?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1484406566174-9da000fda645?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1537151608828-8661a20bdf11?w=600&h=600&fit=crop&crop=center'
+            ],
+            food: [
+                'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495195134817-aeb325ef32d1?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495195333195-5379e6f6a741?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=600&fit=crop&crop=center'
+            ],
+            mountains: [
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1470114716159-e389f8712fda?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center'
+            ],
+            sunset: [
+                'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495520446413-a52ef00751d0?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495453925778-05f2b4be145a?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=600&h=600&fit=crop&crop=center',
+                'https://images.unsplash.com/photo-1495520446413-a52ef00751d0?w=600&h=600&fit=crop&crop=center'
+            ]
         };
+
+        function getRandomImage(theme) {
+            const images = imageLibrary[theme];
+            return images[Math.floor(Math.random() * images.length)];
+        }
 
         const difficultySettings = {
             100: { cols: 10, rows: 10 },
@@ -496,7 +537,7 @@
         document.getElementById('startButton').addEventListener('click', startGame);
 
         function startGame() {
-            currentImageUrl = imageLibrary[selectedTheme];
+            currentImageUrl = getRandomImage(selectedTheme);
             const settings = difficultySettings[selectedDifficulty];
             
             // Hide menu, show playing state
