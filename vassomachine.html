@@ -668,6 +668,22 @@
             function handleMouseMove(moveE) {
                 piece.x = moveE.clientX - startX;
                 piece.y = moveE.clientY - startY;
+                
+                // Magnetic snap while dragging
+                const canvas = document.getElementById('puzzleCanvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
+                const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
+                const magneticThreshold = 80;
+                
+                // Snap to grid if close enough
+                if (Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < magneticThreshold) {
+                    piece.x = correctX - canvasRect.left;
+                }
+                if (Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < magneticThreshold) {
+                    piece.y = correctY - canvasRect.top;
+                }
+                
                 renderPieces();
             }
 
@@ -676,15 +692,16 @@
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
 
-                // Check if piece is in correct position
+                // Check if piece is in correct position with magnetic snap
                 const canvas = document.getElementById('puzzleCanvas');
                 const canvasRect = canvas.getBoundingClientRect();
                 const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
                 const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
+                const magneticThreshold = 80; // Larger magnetic area
 
                 if (
-                    Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < 50 &&
-                    Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < 50
+                    Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < magneticThreshold &&
+                    Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < magneticThreshold
                 ) {
                     placePiece(pieceId);
                 } else {
