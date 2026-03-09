@@ -321,10 +321,10 @@
             border: 3px solid #e9d5ff;
             overflow: hidden;
             z-index: 3;
-            width: 90vmin;
-            height: 90vmin;
-            max-width: 500px;
-            max-height: 500px;
+            width: 500px;
+            height: 500px;
+            max-width: 90vmin;
+            max-height: 90vmin;
         }
 
         .puzzle-piece {
@@ -638,6 +638,16 @@
             document.getElementById('referenceImg').src = currentImageUrl;
 
             generatePuzzlePieces(settings.cols, settings.rows);
+            
+            // Adapt canvas size to puzzle
+            const canvas = document.getElementById('puzzleCanvas');
+            const pieceWidth = 600 / settings.cols;
+            const pieceHeight = 600 / settings.rows;
+            const totalWidth = pieceWidth * settings.cols;
+            const totalHeight = pieceHeight * settings.rows;
+            
+            canvas.style.width = totalWidth + 'px';
+            canvas.style.height = totalHeight + 'px';
             
             renderPieces();
         }
