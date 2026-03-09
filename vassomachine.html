@@ -13,18 +13,41 @@
 
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap');
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(to bottom right, #f8fafc, #f1f5f9);
-            min-height: 100vh;
-            overflow: hidden;
+            background: linear-gradient(135deg, #1a0033 0%, #2d0052 25%, #3d1366 50%, #2d0052 75%, #1a0033 100%);
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
             width: 100%;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 1;
         }
 
         /* MENU STATE */
@@ -32,39 +55,41 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex: 1;
-            padding: 2rem;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            flex-shrink: 0;
         }
 
         .menu-content {
-            max-width: 600px;
+            max-width: 100%;
             width: 100%;
         }
 
         .title {
             font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            color: #1e293b;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            color: #e9d5ff;
             text-align: center;
             margin-bottom: 1rem;
             letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
         }
 
         .subtitle {
-            font-size: 1.125rem;
-            color: #64748b;
+            font-size: clamp(1rem, 4vw, 1.125rem);
+            color: #d8b4fe;
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
         .section {
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
         .section-label {
             font-size: 0.75rem;
             font-weight: 600;
-            color: #475569;
+            color: #c4b5fd;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 1rem;
@@ -76,176 +101,200 @@
             gap: 1rem;
         }
 
+        @media (max-width: 480px) {
+            .grid-3 {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+        }
+
         .grid-3-themes {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .grid-3-themes {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .button-option {
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: 0.5rem;
-            border: 2px solid #e2e8f0;
-            background: white;
+            border: 2px solid rgba(167, 139, 250, 0.5);
+            background: linear-gradient(135deg, rgba(99, 34, 146, 0.8), rgba(168, 85, 247, 0.6));
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             font-family: 'Inter', sans-serif;
             font-weight: 500;
+            backdrop-filter: blur(10px);
         }
 
         .button-option:hover {
-            border-color: #cbd5e1;
+            border-color: #a78bfa;
+            background: linear-gradient(135deg, rgba(126, 34, 206, 0.9), rgba(168, 85, 247, 0.8));
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
         }
 
         .button-option.selected {
-            border-color: #f97316;
-            background: #fff7ed;
+            border-color: #f472b6;
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.9), rgba(236, 72, 153, 0.8));
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.5);
         }
 
         .button-option.selected .option-title {
-            color: #f97316;
+            color: #fce7f3;
         }
 
         .option-title {
-            color: #1e293b;
+            color: #f3e8ff;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2vw, 1rem);
         }
 
         .option-subtitle {
-            color: #64748b;
-            font-size: 0.875rem;
+            color: #ddd6fe;
+            font-size: clamp(0.75rem, 1.5vw, 0.875rem);
             margin-top: 0.5rem;
-        }
-
-        .theme-button {
-            padding: 1rem;
-            font-size: 0.875rem;
-            text-transform: capitalize;
         }
 
         .start-button {
             width: 100%;
             padding: 1rem;
-            background: #f97316;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
             color: white;
             border: none;
             border-radius: 0.5rem;
-            font-size: 1.125rem;
+            font-size: clamp(1rem, 3vw, 1.125rem);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             font-family: 'Inter', sans-serif;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
         }
 
         .start-button:hover:not(:disabled) {
-            background: #ea580c;
+            background: linear-gradient(135deg, #f472b6, #c084fc);
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.5);
+            transform: translateY(-2px);
         }
 
         .start-button:disabled {
-            background: #cbd5e1;
+            background: rgba(168, 139, 250, 0.3);
             cursor: not-allowed;
+            opacity: 0.5;
         }
 
         /* PLAYING STATE */
         .playing-state {
             display: flex;
             flex-direction: column;
-            flex: 1;
+            width: 100%;
+            min-height: 100vh;
             overflow: hidden;
         }
 
         .top-bar {
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 1rem;
+            background: linear-gradient(135deg, rgba(99, 34, 146, 0.7), rgba(126, 34, 206, 0.6));
+            border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+            padding: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .top-bar-title {
             font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: #1e293b;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            color: #e9d5ff;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
         }
 
         .progress-section {
             display: flex;
             align-items: center;
-            gap: 2rem;
+            gap: 0.5rem;
         }
 
         .progress-text {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            min-width: 50px;
         }
 
         .progress-label {
-            font-size: 0.875rem;
-            color: #64748b;
+            font-size: 0.7rem;
+            color: #d8b4fe;
         }
 
         .progress-number {
             font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: #f97316;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .progress-bar {
-            width: 128px;
-            height: 8px;
-            background: #e2e8f0;
+            width: 80px;
+            height: 6px;
+            background: rgba(168, 85, 247, 0.2);
             border-radius: 9999px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: #f97316;
+            background: linear-gradient(90deg, #ec4899, #a855f7);
             transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
         }
 
         .quit-button {
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
-            background: #f1f5f9;
-            border: none;
-            color: #475569;
-            font-size: 0.875rem;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            color: #e9d5ff;
+            font-size: 0.75rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
             font-family: 'Inter', sans-serif;
+            white-space: nowrap;
         }
 
         .quit-button:hover {
-            background: #e2e8f0;
+            background: rgba(168, 85, 247, 0.3);
+            border-color: rgba(168, 85, 247, 0.6);
         }
 
         .game-area {
             flex: 1;
             position: relative;
-            background: linear-gradient(to bottom right, #f1f5f9, #f8fafc);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
             overflow: auto;
         }
 
         .reference-image {
             position: fixed;
-            top: 5rem;
+            bottom: 1rem;
             right: 1rem;
-            width: 150px;
-            height: 150px;
+            width: 100px;
+            height: 100px;
             border-radius: 0.5rem;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            border: 4px solid white;
+            border: 3px solid #e9d5ff;
             z-index: 100;
             background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .reference-image img {
@@ -254,16 +303,22 @@
             object-fit: cover;
         }
 
+        @media (max-height: 800px) {
+            .reference-image {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
         .puzzle-canvas {
-            position: fixed;
-            top: 8rem;
-            left: 3rem;
-            width: 500px;
-            height: 400px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background: white;
             border-radius: 0.5rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            border: 4px solid white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 3px solid #e9d5ff;
             overflow: hidden;
             z-index: 3;
         }
@@ -275,9 +330,9 @@
             background-repeat: no-repeat;
             border-radius: 2px;
             user-select: none;
-            transition: box-shadow 0.1s;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 10;
+            transition: box-shadow 0.1s;
         }
 
         .puzzle-piece:hover {
@@ -286,7 +341,7 @@
         }
 
         .puzzle-piece.selected {
-            box-shadow: 0 0 0 3px #f97316, 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 0 3px #ec4899, 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
         .puzzle-piece.placed {
@@ -312,46 +367,73 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex: 1;
-            background: linear-gradient(to bottom right, #dcfce7, #bbf7d0);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
+            position: relative;
+        }
+
+        .completed-state::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         .completed-content {
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
 
         .completed-title {
             font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            color: #16a34a;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
         }
 
         .completed-message {
-            font-size: 1.25rem;
-            color: #475569;
+            font-size: clamp(1rem, 4vw, 1.25rem);
+            color: #d8b4fe;
             margin-bottom: 2rem;
         }
 
         .replay-button {
-            padding: 0.75rem 2rem;
-            background: #f97316;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
             color: white;
             border: none;
             border-radius: 0.5rem;
-            font-size: 1.125rem;
+            font-size: clamp(1rem, 3vw, 1.125rem);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             font-family: 'Inter', sans-serif;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
         }
 
         .replay-button:hover {
-            background: #ea580c;
+            background: linear-gradient(135deg, #f472b6, #c084fc);
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.5);
+            transform: translateY(-2px);
         }
 
         .hidden {
             display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -408,7 +490,7 @@
         <div class="playing-state hidden" id="playingState">
             <!-- TOP BAR -->
             <div class="top-bar">
-                <div class="top-bar-title">Vasso's Puzzle Generator</div>
+                <div class="top-bar-title">Vasso</div>
                 <div class="progress-section">
                     <div class="progress-text">
                         <div class="progress-label">Progress</div>
@@ -417,8 +499,8 @@
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
-                    <button class="quit-button" id="quitButton">Quit</button>
                 </div>
+                <button class="quit-button" id="quitButton">Quit</button>
             </div>
 
             <!-- GAME AREA -->
@@ -503,17 +585,17 @@
             ]
         };
 
-        function getRandomImage(theme) {
-            const images = imageLibrary[theme];
-            return images[Math.floor(Math.random() * images.length)];
-        }
-
         const difficultySettings = {
             50: { cols: 10, rows: 5 },
             100: { cols: 10, rows: 10 },
             400: { cols: 20, rows: 20 },
             900: { cols: 30, rows: 30 }
         };
+
+        function getRandomImage(theme) {
+            const images = imageLibrary[theme];
+            return images[Math.floor(Math.random() * images.length)];
+        }
 
         // Menu event listeners
         document.querySelectorAll('[data-difficulty]').forEach(btn => {
@@ -545,18 +627,14 @@
             currentImageUrl = getRandomImage(selectedTheme);
             const settings = difficultySettings[selectedDifficulty];
             
-            // Hide menu, show playing state
             document.getElementById('menuState').classList.add('hidden');
             document.getElementById('playingState').classList.remove('hidden');
             gameState = 'playing';
 
-            // Set reference image
             document.getElementById('referenceImg').src = currentImageUrl;
 
-            // Generate pieces
             generatePuzzlePieces(settings.cols, settings.rows);
             
-            // Render pieces
             renderPieces();
         }
 
@@ -565,8 +643,8 @@
             const pieceWidth = 600 / cols;
             const pieceHeight = 600 / rows;
 
-            let xOffset = 700;
-            let yOffset = 100;
+            let xOffset = 50;
+            let yOffset = 50;
             let currentY = yOffset;
 
             for (let row = 0; row < rows; row++) {
@@ -584,11 +662,10 @@
                         placed: false
                     });
 
-                    // Grid layout for pieces
-                    xOffset += pieceWidth + 3;
+                    xOffset += pieceWidth + 2;
                     if (xOffset > window.innerWidth - 50) {
-                        xOffset = 700;
-                        currentY += pieceHeight + 3;
+                        xOffset = 50;
+                        currentY += pieceHeight + 2;
                     }
                 }
             }
@@ -621,7 +698,6 @@
                 }
             });
 
-            // Render placed pieces in canvas
             const canvas = document.getElementById('puzzleCanvas');
             const existingPieces = canvas.querySelectorAll('[data-piece-id]');
             const placedIds = new Set();
@@ -648,7 +724,6 @@
                 }
             });
             
-            // Remove pieces that are no longer placed
             existingPieces.forEach(div => {
                 if (!placedIds.has(parseInt(div.getAttribute('data-piece-id')))) {
                     div.remove();
@@ -674,32 +749,26 @@
                 piece.x = moveE.clientX - startX;
                 piece.y = moveE.clientY - startY;
                 
-                // Magnetic snap only if piece is within canvas area
+                // Improved magnetic snap
                 const canvas = document.getElementById('puzzleCanvas');
                 const canvasRect = canvas.getBoundingClientRect();
-                const pieceRect = {
-                    left: piece.x,
-                    top: piece.y,
-                    right: piece.x + piece.pieceWidth,
-                    bottom: piece.y + piece.pieceHeight
-                };
+                const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
+                const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
+                const magneticThreshold = 60;
                 
-                // Check if piece is within the canvas bounds
+                // Check if piece is within canvas area
                 const isWithinCanvas = 
-                    pieceRect.right > canvasRect.left &&
-                    pieceRect.left < canvasRect.right &&
-                    pieceRect.bottom > canvasRect.top &&
-                    pieceRect.top < canvasRect.bottom;
+                    piece.x + piece.pieceWidth > canvasRect.left &&
+                    piece.x < canvasRect.right &&
+                    piece.y + piece.pieceHeight > canvasRect.top &&
+                    piece.y < canvasRect.bottom;
                 
                 if (isWithinCanvas) {
-                    const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
-                    const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
-                    const magneticThreshold = 80;
-                    
-                    // Snap to grid if close enough
+                    // Snap horizontally
                     if (Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < magneticThreshold) {
                         piece.x = correctX - canvasRect.left;
                     }
+                    // Snap vertically
                     if (Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < magneticThreshold) {
                         piece.y = correctY - canvasRect.top;
                     }
@@ -713,16 +782,16 @@
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
 
-                // Check if piece is in correct position with magnetic snap
+                // Final snap check
                 const canvas = document.getElementById('puzzleCanvas');
                 const canvasRect = canvas.getBoundingClientRect();
                 const correctX = canvasRect.left + (piece.col * piece.pieceWidth);
                 const correctY = canvasRect.top + (piece.row * piece.pieceHeight);
-                const magneticThreshold = 80; // Larger magnetic area
+                const snapThreshold = 40;
 
                 if (
-                    Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < magneticThreshold &&
-                    Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < magneticThreshold
+                    Math.abs((piece.x + piece.pieceWidth / 2) - (correctX + piece.pieceWidth / 2)) < snapThreshold &&
+                    Math.abs((piece.y + piece.pieceHeight / 2) - (correctY + piece.pieceHeight / 2)) < snapThreshold
                 ) {
                     placePiece(pieceId);
                 } else {
