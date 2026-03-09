@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vasso's Puzzle Generator</title>
+    <title>Vasso's Puzzle Machine</title>
     <style>
         * {
             margin: 0;
@@ -361,42 +361,42 @@
         <div class="menu-state" id="menuState">
             <div class="menu-content">
                 <h1 class="title">Vasso's Puzzle Generator</h1>
-                <p class="subtitle">Assemblez des puzzles magnifiques avec des images libres de droit</p>
+                <p class="subtitle">Assemble beautiful puzzles with free-to-use images</p>
 
                 <!-- DIFFICULTY SELECTION -->
                 <div class="section">
-                    <div class="section-label">Choisir la difficulté</div>
+                    <div class="section-label">Choose Difficulty</div>
                     <div class="grid-3">
                         <button class="button-option" data-difficulty="100">
-                            <div class="option-title">100 pièces</div>
-                            <div class="option-subtitle">Facile</div>
+                            <div class="option-title">100 Pieces</div>
+                            <div class="option-subtitle">Easy</div>
                         </button>
                         <button class="button-option" data-difficulty="400">
-                            <div class="option-title">400 pièces</div>
-                            <div class="option-subtitle">Moyen</div>
+                            <div class="option-title">400 Pieces</div>
+                            <div class="option-subtitle">Medium</div>
                         </button>
                         <button class="button-option" data-difficulty="900">
-                            <div class="option-title">900 pièces</div>
-                            <div class="option-subtitle">Difficile</div>
+                            <div class="option-title">900 Pieces</div>
+                            <div class="option-subtitle">Hard</div>
                         </button>
                     </div>
                 </div>
 
                 <!-- THEME SELECTION -->
                 <div class="section">
-                    <div class="section-label">Choisir le thème</div>
+                    <div class="section-label">Choose Theme</div>
                     <div class="grid-3-themes">
                         <button class="button-option theme-button" data-theme="nature">Nature</button>
-                        <button class="button-option theme-button" data-theme="city">Ville</button>
-                        <button class="button-option theme-button" data-theme="animals">Animaux</button>
-                        <button class="button-option theme-button" data-theme="food">Nourriture</button>
-                        <button class="button-option theme-button" data-theme="mountains">Montagnes</button>
-                        <button class="button-option theme-button" data-theme="sunset">Coucher de soleil</button>
+                        <button class="button-option theme-button" data-theme="city">City</button>
+                        <button class="button-option theme-button" data-theme="animals">Animals</button>
+                        <button class="button-option theme-button" data-theme="food">Food</button>
+                        <button class="button-option theme-button" data-theme="mountains">Mountains</button>
+                        <button class="button-option theme-button" data-theme="sunset">Sunset</button>
                     </div>
                 </div>
 
                 <!-- START BUTTON -->
-                <button class="start-button" id="startButton" disabled>Démarrer le jeu</button>
+                <button class="start-button" id="startButton" disabled>Start Game</button>
             </div>
         </div>
 
@@ -407,13 +407,13 @@
                 <div class="top-bar-title">Vasso's Puzzle Generator</div>
                 <div class="progress-section">
                     <div class="progress-text">
-                        <div class="progress-label">Progression</div>
+                        <div class="progress-label">Progress</div>
                         <div class="progress-number" id="progressNumber">0%</div>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
-                    <button class="quit-button" id="quitButton">Quitter</button>
+                    <button class="quit-button" id="quitButton">Quit</button>
                 </div>
             </div>
 
@@ -435,9 +435,9 @@
         <!-- COMPLETED STATE -->
         <div class="completed-state hidden" id="completedState">
             <div class="completed-content">
-                <h1 class="completed-title">Félicitations! 🎉</h1>
-                <p class="completed-message">Vous avez complété le puzzle avec succès!</p>
-                <button class="replay-button" id="replayButton">Jouer à nouveau</button>
+                <h1 class="completed-title">Congratulations! 🎉</h1>
+                <p class="completed-message">You've completed the puzzle successfully!</p>
+                <button class="replay-button" id="replayButton">Play Again</button>
             </div>
         </div>
     </div>
@@ -453,7 +453,7 @@
         let selectedPiece = null;
         let draggedPiece = null;
 
-        // Vraies photos libres de droit d'Unsplash
+        // Image library with direct URLs
         const imageLibrary = {
             nature: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&crop=center',
             city: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=600&h=600&fit=crop&crop=center',
@@ -538,7 +538,7 @@
                         placed: false
                     });
 
-                    // Disposition en grille des pièces
+                    // Grid layout for pieces
                     xOffset += pieceWidth + 3;
                     if (xOffset > window.innerWidth - 50) {
                         xOffset = 700;
