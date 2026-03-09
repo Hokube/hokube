@@ -327,7 +327,7 @@
             height: 500px;
             max-width: 90vmin;
             max-height: 90vmin;
-            touch-action: manipulation;
+            touch-action: none;
         }
 
         .puzzle-piece {
@@ -340,7 +340,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 10;
             transition: box-shadow 0.1s;
-            touch-action: manipulation;
+            touch-action: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
@@ -714,58 +714,50 @@
                 div.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
                 div.style.position = 'absolute';
                 
-                // Universal click handler that works on both desktop and mobile
-                const handleClick = (e) => {
+                // Universal handler for desktop and mobile
+                const handleInteraction = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     selectLoosePiece(piece.id);
                 };
                 
-                // Listen to both click and touch events
-                div.addEventListener('click', handleClick, { passive: false });
-                div.addEventListener('touchend', handleClick, { passive: false });
+                // Use pointerdown for best mobile compatibility
+                div.addEventListener('pointerdown', handleInteraction, { passive: false });
                 
                 canvas.appendChild(div);
             });
         }
 
         function selectLoosePiece(pieceId) {
-            selectedPiece = selectedPiece === pieceId ? null : pieceId;
-            selectedGridSlot = null;
+            if (selectedPiece === null) {
+                // Première pièce sélectionnée
+                selectedPiece = pieceId;
+            } else if (selectedPiece === pieceId) {
+                // Clic sur la même pièce = désélection
+                selectedPiece = null;
+            } else {
+                // Deuxième pièce cliquée = swap
+                swapPieces(selectedPiece, pieceId);
+                selectedPiece = null;
+            }
             renderPieces();
         }
 
-        function selectGridSlot(pieceId) {
-            if (selectedPiece === null) {
-                selectedPiece = pieceId;
-                selectedGridSlot = null;
-                renderPieces();
-                return;
-            }
+        function swapPieces(pieceId1, pieceId2) {
+            const piece1 = pieces.find(p => p.id === pieceId1);
+            const piece2 = pieces.find(p => p.id === pieceId2);
             
-            if (selectedPiece === pieceId) {
-                selectedPiece = null;
-                renderPieces();
-                return;
-            }
+            if (!piece1 || !piece2) return;
             
-            // Swap grid positions
-            const selectedPieceObj = pieces.find(p => p.id === selectedPiece);
-            const targetPieceObj = pieces.find(p => p.id === pieceId);
+            // Échanger les positions
+            const tempRow = piece1.currentRow;
+            const tempCol = piece1.currentCol;
+            piece1.currentRow = piece2.currentRow;
+            piece1.currentCol = piece2.currentCol;
+            piece2.currentRow = tempRow;
+            piece2.currentCol = tempCol;
             
-            if (selectedPieceObj && targetPieceObj) {
-                const tempRow = selectedPieceObj.currentRow;
-                const tempCol = selectedPieceObj.currentCol;
-                selectedPieceObj.currentRow = targetPieceObj.currentRow;
-                selectedPieceObj.currentCol = targetPieceObj.currentCol;
-                targetPieceObj.currentRow = tempRow;
-                targetPieceObj.currentCol = tempCol;
-            }
-            
-            selectedPiece = null;
-            selectedGridSlot = null;
             updateProgress();
-            renderPieces();
         }
 
         function updateProgress() {
