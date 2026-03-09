@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>Vasso's Puzzle Generator</title>
     <style>
         * {
@@ -17,6 +17,8 @@
             width: 100%;
             height: 100%;
             overflow: auto;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -325,6 +327,7 @@
             height: 500px;
             max-width: 90vmin;
             max-height: 90vmin;
+            touch-action: manipulation;
         }
 
         .puzzle-piece {
@@ -337,6 +340,10 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 10;
             transition: box-shadow 0.1s;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .puzzle-piece:hover {
@@ -707,16 +714,16 @@
                 div.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
                 div.style.position = 'absolute';
                 
-                div.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    selectLoosePiece(piece.id);
-                });
-                
-                div.addEventListener('touchend', (e) => {
+                // Universal click handler that works on both desktop and mobile
+                const handleClick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     selectLoosePiece(piece.id);
-                });
+                };
+                
+                // Listen to both click and touch events
+                div.addEventListener('click', handleClick, { passive: false });
+                div.addEventListener('touchend', handleClick, { passive: false });
                 
                 canvas.appendChild(div);
             });
