@@ -321,6 +321,10 @@
             border: 3px solid #e9d5ff;
             overflow: hidden;
             z-index: 3;
+            width: 90vmin;
+            height: 90vmin;
+            max-width: 500px;
+            max-height: 500px;
         }
 
         .puzzle-piece {
@@ -643,161 +647,121 @@
             const pieceWidth = 600 / cols;
             const pieceHeight = 600 / rows;
 
-            let xOffset = 50;
-            let yOffset = 50;
-            let currentY = yOffset;
-
+            // Create all pieces in their correct positions first
+            let piecesList = [];
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
-                    pieces.push({
+                    piecesList.push({
                         id: row * cols + col,
-                        row,
-                        col,
-                        x: xOffset,
-                        y: currentY,
+                        correctRow: row,
+                        correctCol: col,
+                        currentRow: row,
+                        currentCol: col,
                         sourceX: col * pieceWidth,
                         sourceY: row * pieceHeight,
                         pieceWidth,
                         pieceHeight,
                         placed: false
                     });
-
-                    xOffset += pieceWidth + 2;
-                    if (xOffset > window.innerWidth - 50) {
-                        xOffset = 50;
-                        currentY += pieceHeight + 2;
-                    }
                 }
             }
+            
+            // Shuffle the pieces by swapping their positions randomly
+            for (let i = piecesList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                // Swap currentRow and currentCol
+                [piecesList[i].currentRow, piecesList[j].currentRow] = [piecesList[j].currentRow, piecesList[i].currentRow];
+                [piecesList[i].currentCol, piecesList[j].currentCol] = [piecesList[j].currentCol, piecesList[i].currentCol];
+            }
 
+            pieces = piecesList;
             placedPieces = new Set();
         }
 
         function renderPieces() {
-            const container = document.getElementById('piecesContainer');
-            container.innerHTML = '';
-
-            pieces.forEach(piece => {
-                if (!placedPieces.has(piece.id)) {
-                    const div = document.createElement('div');
-                    div.className = `puzzle-piece ${selectedPiece === piece.id ? 'selected' : ''}`;
-                    div.style.left = piece.x + 'px';
-                    div.style.top = piece.y + 'px';
-                    div.style.width = piece.pieceWidth + 'px';
-                    div.style.height = piece.pieceHeight + 'px';
-                    div.style.backgroundImage = `url('${currentImageUrl}')`;
-                    div.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
-                    
-                    div.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        selectLoosePiece(piece.id);
-                    });
-                    
-                    container.appendChild(div);
-                }
-            });
-
             const canvas = document.getElementById('puzzleCanvas');
-            const existingPieces = canvas.querySelectorAll('[data-piece-id]');
-            const placedIds = new Set();
+            canvas.innerHTML = '';
             
+            // Render all pieces on the canvas aligned to grid
             pieces.forEach(piece => {
-                if (placedPieces.has(piece.id)) {
-                    placedIds.add(piece.id);
-                    
-                    let pieceDiv = canvas.querySelector(`[data-piece-id="${piece.id}"]`);
-                    if (!pieceDiv) {
-                        pieceDiv = document.createElement('div');
-                        pieceDiv.className = 'puzzle-piece placed';
-                        pieceDiv.setAttribute('data-piece-id', piece.id);
-                        pieceDiv.setAttribute('data-row', piece.row);
-                        pieceDiv.setAttribute('data-col', piece.col);
-                        canvas.appendChild(pieceDiv);
-                    }
-                    
-                    pieceDiv.style.position = 'absolute';
-                    pieceDiv.style.left = (piece.col * piece.pieceWidth) + 'px';
-                    pieceDiv.style.top = (piece.row * piece.pieceHeight) + 'px';
-                    pieceDiv.style.width = piece.pieceWidth + 'px';
-                    pieceDiv.style.height = piece.pieceHeight + 'px';
-                    pieceDiv.style.backgroundImage = `url('${currentImageUrl}')`;
-                    pieceDiv.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
-                    
-                    // Add click handler for placed pieces
-                    pieceDiv.style.cursor = 'pointer';
-                    pieceDiv.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        selectGridSlot(piece.row, piece.col, piece.id);
-                    });
-                }
-            });
-            
-            existingPieces.forEach(div => {
-                if (!placedIds.has(parseInt(div.getAttribute('data-piece-id')))) {
-                    div.remove();
-                }
+                const div = document.createElement('div');
+                const isInCorrectPosition = piece.currentRow === piece.correctRow && 
+                                          piece.currentCol === piece.correctCol;
+                
+                div.className = `puzzle-piece ${selectedPiece === piece.id ? 'selected' : ''} ${isInCorrectPosition ? 'placed' : ''}`;
+                div.style.left = (piece.currentCol * piece.pieceWidth) + 'px';
+                div.style.top = (piece.currentRow * piece.pieceHeight) + 'px';
+                div.style.width = piece.pieceWidth + 'px';
+                div.style.height = piece.pieceHeight + 'px';
+                div.style.backgroundImage = `url('${currentImageUrl}')`;
+                div.style.backgroundPosition = `-${piece.sourceX}px -${piece.sourceY}px`;
+                div.style.position = 'absolute';
+                
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectLoosePiece(piece.id);
+                });
+                
+                div.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectLoosePiece(piece.id);
+                });
+                
+                canvas.appendChild(div);
             });
         }
 
         function selectLoosePiece(pieceId) {
-            if (selectedPiece === pieceId) {
-                selectedPiece = null;
-                selectedGridSlot = null;
-            } else {
-                selectedPiece = pieceId;
-                selectedGridSlot = null;
-                // If a grid slot is already selected, try to place
-                if (selectedGridSlot !== null) {
-                    swapPieces(pieceId, selectedGridSlot);
-                    selectedPiece = null;
-                    selectedGridSlot = null;
-                }
-            }
-            renderPieces();
-        }
-
-        function selectGridSlot(row, col, placedPieceId) {
-            if (selectedPiece === null) {
-                // No piece selected, just select this slot
-                selectedGridSlot = { row, col, pieceId: placedPieceId };
-                return;
-            }
-            
-            // Swap with selected loose piece
-            swapPieces(selectedPiece, { row, col, pieceId: placedPieceId });
-            selectedPiece = null;
+            selectedPiece = selectedPiece === pieceId ? null : pieceId;
             selectedGridSlot = null;
             renderPieces();
         }
 
-        function swapPieces(loosePieceId, gridSlot) {
-            const loosePiece = pieces.find(p => p.id === loosePieceId);
-            const placedPiece = pieces.find(p => p.row === gridSlot.row && p.col === gridSlot.col && placedPieces.has(p.id));
-            
-            if (!loosePiece) return;
-            
-            // Place the loose piece in the grid
-            loosePiece.row = gridSlot.row;
-            loosePiece.col = gridSlot.col;
-            placedPieces.add(loosePieceId);
-            
-            // Move the placed piece (if exists) to loose pieces area
-            if (placedPiece) {
-                placedPieces.delete(gridSlot.pieceId);
-                placedPiece.x = loosePiece.x || 50;
-                placedPiece.y = loosePiece.y || 50;
+        function selectGridSlot(pieceId) {
+            if (selectedPiece === null) {
+                selectedPiece = pieceId;
+                selectedGridSlot = null;
+                renderPieces();
+                return;
             }
             
+            if (selectedPiece === pieceId) {
+                selectedPiece = null;
+                renderPieces();
+                return;
+            }
+            
+            // Swap grid positions
+            const selectedPieceObj = pieces.find(p => p.id === selectedPiece);
+            const targetPieceObj = pieces.find(p => p.id === pieceId);
+            
+            if (selectedPieceObj && targetPieceObj) {
+                const tempRow = selectedPieceObj.currentRow;
+                const tempCol = selectedPieceObj.currentCol;
+                selectedPieceObj.currentRow = targetPieceObj.currentRow;
+                selectedPieceObj.currentCol = targetPieceObj.currentCol;
+                targetPieceObj.currentRow = tempRow;
+                targetPieceObj.currentCol = tempCol;
+            }
+            
+            selectedPiece = null;
+            selectedGridSlot = null;
             updateProgress();
             renderPieces();
         }
 
         function updateProgress() {
-            const progress = Math.round((placedPieces.size / pieces.length) * 100);
+            const correctCount = pieces.filter(p => 
+                p.currentRow === p.correctRow && 
+                p.currentCol === p.correctCol
+            ).length;
+            
+            const progress = Math.round((correctCount / pieces.length) * 100);
             document.getElementById('progressNumber').textContent = progress + '%';
             document.getElementById('progressFill').style.width = progress + '%';
 
-            if (placedPieces.size === pieces.length) {
+            if (correctCount === pieces.length) {
                 setTimeout(() => completeGame(), 500);
             }
         }
